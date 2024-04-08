@@ -8,7 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "dev": "nodemon --watch src src/index.ts",
+    "dev": "nodemon --watch src src/index.ts --env-file development.env",
     "start": "node build/index.js"
   },
   "keywords": [
@@ -17,9 +17,7 @@
     "device",
     "raspberry",
     "pi",
-    "aws",
-    "azure",
-    "mqtt"
+    "aws"
   ],
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -31,6 +29,8 @@
     "typescript": "^5.4.3"
   },
   "dependencies": {
+    "@aws-sdk/client-iot": "^3.549.0",
+    "aws-sdk": "^2.1594.0",
     "cors": "^2.8.5",
     "express": "^4.19.2"
   }
