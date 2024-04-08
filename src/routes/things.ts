@@ -55,7 +55,7 @@ router.get('/thingshadow', async(req:any, res:any)=>{
     try{
         const command = new GetThingShadowCommand({thingName:req.query.thingName})
         const response = await AWSDataPlaneClient.send( command );
-        
+
         if( response.payload )
         return res.send(JSON.parse( new TextDecoder().decode(response.payload)));
 
