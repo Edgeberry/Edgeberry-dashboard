@@ -13,6 +13,7 @@
  * 
  *  resources:
  *      https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_nodejs.html
+ *      https://github.com/marketplace/actions/beanstalk-deploy
  */
 
 
