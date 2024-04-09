@@ -29,7 +29,7 @@ jobs:
 
       - name: Get the latest UI release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           gh auth login --with-token <<< "${GH_TOKEN}"
           gh release download <repo-owner>/<repo-name> <tag> --pattern "EdgeBerry-io-UI.tar.gz"
