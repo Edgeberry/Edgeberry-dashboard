@@ -24,23 +24,18 @@ jobs:
           CI: ""
         run: npm run build
 
-      - name: Gather required files
+      - name: Gather required files in a temporary directory
         run: mkdir tempdir; mv ./package.json ./tempdir/; mv ./build ./tempdir/
 
       - name: Get UI latest release info
         id: latest_release
-        run: |
-          tag=$(gh release view SpuQ/EdgeBerry-io-UI latest --json tag_name --jq '.tag_name')
-          echo "UI_RELEASE_TAG=$tag" >> $GITHUB_ENV
+        run: tag=$(gh release view SpuQ/EdgeBerry-io-UI latest --json tag_name --jq '.tag_name'); echo "UI_RELEASE_TAG=$tag" >> $GITHUB_ENV
 
       - name: Download UI release asset
-        run: |
-          gh release download SpuQ/EdgeBerry-io-UI $UI_RELEASE_TAG --pattern "EdgeBerry-io-UI.tar.gz"
+        run: gh release download SpuQ/EdgeBerry-io-UI $UI_RELEASE_TAG --pattern "EdgeBerry-io-UI.tar.gz"
 
       - name: Unpack the UI in the public folder
-        run: |
-          mkdir ./tempdir/build/public
-          tar -xzf EdgeBerry-io-UI.tar.gz -C ./tempdir/build/public
+        run: mkdir ./tempdir/build/public; tar -xzf EdgeBerry-io-UI.tar.gz -C ./tempdir/build/public
 
       - name: Generate deployment package
         run: zip -r deploy.zip ./tempdir/*
