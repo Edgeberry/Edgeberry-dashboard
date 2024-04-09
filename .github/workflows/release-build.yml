@@ -28,10 +28,7 @@ jobs:
         run: mkdir tempdir; mv ./package.json ./tempdir/; mv ./build ./tempdir/
 
       - name: Get the latest UI release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          echo "${GH_TOKEN}" | gh auth login --with-token
           gh release download <repo-owner>/<repo-name> <tag> --pattern "EdgeBerry-io-UI.tar.gz"
 
       - name: Unpack the UI in the public folder
