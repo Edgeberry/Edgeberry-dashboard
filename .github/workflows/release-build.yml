@@ -29,7 +29,7 @@ jobs:
 
       - name: Download latest UI release asset
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release download --repo SpuQ/EdgeBerry-io-UI --pattern "EdgeBerry-io-UI.tar.gz"
 
       - name: Unpack the UI in the public folder
