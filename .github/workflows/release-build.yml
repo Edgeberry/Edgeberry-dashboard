@@ -28,25 +28,16 @@ jobs:
         run: mkdir tempdir; mv ./package.json ./tempdir/; mv ./build ./tempdir/
 
       - name: Get the latest UI release
-        id: fetch-asset
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const response = await github.repos.getLatestRelease({
-              owner: 'SpuQ',
-              repo: 'EdgeBerry-io-UI',
-            });
-            const assetUrl = response.data.assets.find(asset => asset.name === 'EdgeBerry-io-UI.tar.gz').browser_download_url;
-            core.setOutput('asset-url', assetUrl);
-
-      - name: Download latest UI tarball
-        run: wget -O asset.tar.gz ${{ steps.fetch-asset.outputs.asset-url }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth login --with-token <<< "${GH_TOKEN}"
+          gh release download <repo-owner>/<repo-name> <tag> --pattern "EdgeBerry-io-UI.tar.gz"
 
       - name: Unpack the UI in the public folder
         run: |
           mkdir ./tempdir/build/public
-          tar -xzf asset.tar.gz -C ./tempdir/build/public
+          tar -xzf EdgeBerry-io-UI.tar.gz -C ./tempdir/build/public
 
       - name: Generate deployment package
         run: zip -r deploy.zip ./tempdir/*
