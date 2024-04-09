@@ -1,6 +1,6 @@
 {
   "name": "edgeberry-manager",
-  "version": "2.3.1",
+  "version": "0.1.1",
   "description": "Manage your EdgeBerry assets",
   "author": "Sanne 'SpuQ' Santens",
   "license": "MIT",
@@ -8,7 +8,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "postbuild": "chmod +x bin/postbuild.sh && ./bin/postbuild.sh",
     "dev": "nodemon --watch src src/index.ts",
     "start": "node build/index.js"
   },

@@ -1,0 +1,73 @@
+name: Build and Package
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm install --include=dev
+
+      - name: Build project
+        env:
+          CI: ""
+        run: npm run build
+
+      - name: Gather required files
+        run: mkdir tempdir; mv ./package.json ./tempdir/; mv ./build ./tempdir/
+
+      - name: Get the latest UI release
+        id: fetch-asset
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const response = await github.repos.getLatestRelease({
+              owner: 'SpuQ',
+              repo: 'EdgeBerry-io-UI',
+            });
+            const assetUrl = response.data.assets.find(asset => asset.name === 'EdgeBerry-io-UI.tar.gz').browser_download_url;
+            core.setOutput('asset-url', assetUrl);
+
+      - name: Download latest UI tarball
+        run: wget -O asset.tar.gz ${{ steps.fetch-asset.outputs.asset-url }}
+
+      - name: Unpack the UI in the public folder
+        run: |
+          mkdir ./tempdir/build/public
+          tar -xzf asset.tar.gz -C ./tempdir/build/public
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip ./tempdir/*
+
+      - name: Upload packaged project build to release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: deploy.zip
+          asset_name: deploy.zip
+          asset_content_type: application/gzip
+    
+      - name: Deploy to Elastic Beanstalk (AWS)
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: EdgeBerry-io
+          environment_name: Edgeberry-io-env
+          version_label: 12345
+          region: eu-north-1
+          deployment_package: deploy.zip
