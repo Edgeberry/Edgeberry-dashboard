@@ -27,9 +27,14 @@ jobs:
       - name: Gather required files
         run: mkdir tempdir; mv ./package.json ./tempdir/; mv ./build ./tempdir/
 
-      - name: Get the latest UI release
+      - name: Get latest UI release info
+        id: latest_release
         run: |
-          gh release download <repo-owner>/<repo-name> <tag> --pattern "EdgeBerry-io-UI.tar.gz"
+          echo "::set-output name=tag::$(gh release view SpuQ/EdgeBerry-io-UI latest --json tag_name --jq '.tag_name')"
+        
+      - name: Download UI release asset
+        run: |
+          gh release download SpuQ/EdgeBerry-io-UI ${{ steps.latest_release.outputs.tag }} --pattern "EdgeBerry-io-UI.tar.gz"
 
       - name: Unpack the UI in the public folder
         run: |
