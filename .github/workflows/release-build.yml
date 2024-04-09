@@ -35,8 +35,8 @@ jobs:
       - name: Unpack the UI in the public folder
         run: mkdir ./tempdir/build/public; tar -xzf EdgeBerry-io-UI.tar.gz -C ./tempdir/build/public
 
-      - name: Generate deployment package
-        run: zip -r deploy.zip ./tempdir/*
+      - name: Generate deployment package (zip it!)
+        run: cd tempdir; zip -r ../deploy.zip ./*; cd ..
 
       - name: Upload packaged project build to release assets
         uses: actions/upload-release-asset@v1
