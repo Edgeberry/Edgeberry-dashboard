@@ -41,8 +41,8 @@ router.get('/list', async(req:any, res:any)=>{
         var response = await AWSIoTClient.send( command );
         return res.send( response.things );
     }
-    catch(err){
-        return res.status(500).send({message:err});
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
     }
 });
 

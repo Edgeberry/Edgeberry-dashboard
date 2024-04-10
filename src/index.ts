@@ -31,7 +31,7 @@ app.use(express.json());        // JSON API
 app.use(cors({origin:'*'}));    // Cross-origin references
 // Use the API Routers
 app.use('/api/user', userRoutes );
-app.use('/api/thing', thingRoutes );
+app.use('/api/things', thingRoutes );
 // Serve the public directory and a static HTML index file
 app.use(express.static( __dirname+'/public/'));
 app.get('*', (req:any, res:any)=>{

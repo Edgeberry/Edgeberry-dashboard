@@ -1,7 +1,7 @@
 {
-  "name": "edgeberry-manager",
+  "name": "edgeberry-io-backend",
   "version": "0.1.1",
-  "description": "Manage your EdgeBerry assets",
+  "description": "Manage your EdgeBerry assets in the cloud",
   "author": "Sanne 'SpuQ' Santens",
   "license": "MIT",
   "main": "build/index.js",
