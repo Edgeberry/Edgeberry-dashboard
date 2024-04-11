@@ -14,6 +14,7 @@
  *  resources:
  *      https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_nodejs.html
  *      https://github.com/marketplace/actions/beanstalk-deploy
+ *      https://honesw.com/blog/how-to-see-an-ssl-certificate-https-on-an-elastic-beanstalk-environment-without-a-load-balancer
  */
 
 

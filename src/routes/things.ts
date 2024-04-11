@@ -18,9 +18,15 @@
  *  AWS_ACCESS_KEY_ID
  *  AWS_SECRET_ACCESS_KEY
  *  
+ * 
+ *  note:   - Fleet Indexing must be enabled to get the device connection:
+ *              $ aws iot update-indexing-configuration --thing-indexing-configuration thingIndexingMode=REGISTRY_AND_SHADOW,thingConnectivityIndexingMode=STATUS
+ *            To view the connection state:
+ *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
-import { IoTClient, ListThingsCommand } from '@aws-sdk/client-iot';
+import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand } from '@aws-sdk/client-iot';
 import { GetThingShadowCommand, IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
+import { IotData } from 'aws-sdk';
 
 import { Router } from "express";
 const router = Router();
@@ -28,6 +34,8 @@ const router = Router();
 const iotClientConfig = {
     region: 'eu-north-1'
 }
+
+const endpoint = "a11fkxltf4r89e-ats.iot.eu-north-1.amazonaws.com"
 
 const AWSIoTClient = new IoTClient( iotClientConfig );
 const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
@@ -46,6 +54,26 @@ router.get('/list', async(req:any, res:any)=>{
     }
 });
 
+/*  
+ *  Get thing Fleet index
+ *  Get the Fleet index by Thing name. Fleet indexing must be enabled (!)
+ */
+router.get('/index', async(req:any, res:any)=>{
+    // Thing name in URL parameters
+    if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
+
+    try{
+        const command = new SearchIndexCommand({queryString:'thingName:'+req.query.thingName});
+        const response = await AWSIoTClient.send( command );
+        if( response.things && response.things.length >=1 )
+        return res.send( response.things[0] );
+
+        return res.status(404).send({message:req.query.thingName+' not found'});
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
+    }
+});
 
 /* Get Shadow of a specific thing */
 router.get('/thingshadow', async(req:any, res:any)=>{
