@@ -34,8 +34,6 @@ const iotClientConfig = {
     region: 'eu-north-1'
 }
 
-const endpoint = "a11fkxltf4r89e-ats.iot.eu-north-1.amazonaws.com"
-
 const AWSIoTClient = new IoTClient( iotClientConfig );
 const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
 

@@ -23,7 +23,6 @@ import cookieParser from 'cookie-parser';  // parse cookies from requests
 // API routes
 import userRoutes from './routes/user';
 import thingRoutes from './routes/things';
-import { user_createNewUser } from './user';
 
 
 /* Express API server */
@@ -42,5 +41,3 @@ app.get('*', (req:any, res:any)=>{
 });
 // Start the webserver
 app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeBerry Asset Manager backend running on port '+8081+'\x1b[30m')});
-
-//user_createNewUser( 'sanne.santens@gmail.com', 'introception', 'Sanne');

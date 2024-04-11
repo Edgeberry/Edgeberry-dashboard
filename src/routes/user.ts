@@ -36,6 +36,17 @@ router.post('/login', async(req:any, res:any)=>{
     }
 });
 
+/*  Log out */
+router.post('/logout', (req,res) =>{
+    // Destroy the cookie by setting a new one that directly expires
+    res.cookie('jwt',' ', {
+        httpOnly: true,
+        maxAge: 0
+    });
+    // send a success message with the new cookie
+    res.send({message: 'success'});
+});
+
 /* Get user data */
 router.get('/user', async(req:any, res:any)=>{
     try{

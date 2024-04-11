@@ -85,7 +85,6 @@ async function user_findByEmail( email:string ){
             else{
                 return resolve(null);
             }
-            return reject('Something was not right...');
         }
         catch(err){
             console.log(err);
@@ -118,7 +117,6 @@ async function user_findById( id:string ){
             else{
                 return resolve(null);
             }
-            return reject('Something was not right...');
         }
         catch(err){
             console.log(err);
