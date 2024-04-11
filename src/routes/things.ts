@@ -28,6 +28,7 @@ import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand 
 import { GetThingShadowCommand, IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
 
 import { Router } from "express";
+import { user_getUserFromCookie } from '../user';
 const router = Router();
 
 const iotClientConfig = {
@@ -42,6 +43,10 @@ const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
 /* Get list of all things */
 router.get('/list', async(req:any, res:any)=>{
     try{
+        // Check for an authenticated user
+        if( !await user_getUserFromCookie(req.cookies.jwt) )
+        return res.status(403).send({message:'Unauthorized'});
+        // Create and execute the 'list things' command
         var command = new ListThingsCommand( {maxResults:20} );
         var response = await AWSIoTClient.send( command );
         return res.send( response.things );
@@ -56,9 +61,14 @@ router.get('/list', async(req:any, res:any)=>{
  */
 router.get('/description', async(req:any, res:any)=>{
     // Thing name in URL parameters
-    if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
+    if( typeof req.query.thingName !== 'string')
+    return res.status(400).send({message:"No thingName"});
 
     try{
+        // Check for an authenticated user
+        if( !await user_getUserFromCookie(req.cookies.jwt) )
+        return res.status(403).send({message:'Unauthorized'});
+        // Create and execute the 'describe thing' command
         const command = new DescribeThingCommand({thingName:req.query.thingName});
         const response = await AWSIoTClient.send( command );
         return res.send(response);
@@ -77,12 +87,16 @@ router.get('/index', async(req:any, res:any)=>{
     if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
 
     try{
+        // Check for an authenticated user
+        if( !await user_getUserFromCookie(req.cookies.jwt) )
+        return res.status(403).send({message:'Unauthorized'});
+        // Create and execute the 'search index' command
         const command = new SearchIndexCommand({queryString:'thingName:'+req.query.thingName});
         const response = await AWSIoTClient.send( command );
         if( response.things && response.things.length >=1 )
         return res.send( response.things[0] );
-
-        return res.status(404).send({message:req.query.thingName+' not found'});
+        // Not found
+        else return res.status(404).send({message:req.query.thingName+' not found'});
     }
     catch(err:any){
         return res.status(500).send({message:err.name+': '+err.message});
@@ -95,6 +109,10 @@ router.get('/thingshadow', async(req:any, res:any)=>{
     if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
 
     try{
+        // Check for an authenticated user
+        if( !await user_getUserFromCookie( req.cookies.jwt) )
+        return res.status(403).send({message:'Unauthorized'});
+        // Create and execute the 'get thing shadow' command
         const command = new GetThingShadowCommand({thingName:req.query.thingName})
         const response = await AWSDataPlaneClient.send( command );
 

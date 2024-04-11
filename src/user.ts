@@ -16,10 +16,8 @@ const dynamoClient = new DynamoDBClient({
 // DynamoDB document client
 const documentClient = DynamoDBDocumentClient.from(dynamoClient);
 
-/* Encrypt
- * Encrypt Password before storing in database
- */
-export async function encryptValue( value:string ){
+/* Encrypt */
+export async function encryptData( value:string ){
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash( value, salt);
     return hashedPassword;
@@ -36,7 +34,6 @@ export async function user_createNewUser( email:string, password:string, usernam
                 return reject('Lookup failed');
             });
         // If a user with this e-mail is found, reject
-        console.log(user);
         if( user ) return reject('E-mail already registered');
 
         // Create the command to create the new user
@@ -46,13 +43,12 @@ export async function user_createNewUser( email:string, password:string, usernam
                 uid: crypto.randomUUID(),
                 username: username,
                 email: email,
-                password: await encryptValue(password)
+                password: await encryptData(password)
             }
         });
 
         try{
             const response = await documentClient.send(command);
-            console.log(response);
             return resolve(response);
         }
         catch(err){
@@ -78,7 +74,6 @@ async function user_findByEmail( email:string ){
         // Execute the query command
         try{
             const response = await documentClient.send(command);
-            console.log(response)
             if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items ){
                 return resolve(response.Items[0]);
             }
@@ -87,7 +82,6 @@ async function user_findByEmail( email:string ){
             }
         }
         catch(err){
-            console.log(err);
             return reject(err);
         }
     });
@@ -110,16 +104,11 @@ async function user_findById( id:string ){
         // Execute the query command
         try{
             const response = await documentClient.send(command);
-            console.log(response)
-            if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items ){
-                return resolve(response.Items[0]);
-            }
-            else{
-                return resolve(null);
-            }
+            if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items )
+            return resolve(response.Items[0]);
+            else return resolve(null);
         }
         catch(err){
-            console.log(err);
             return reject(err);
         }
     });
