@@ -26,7 +26,6 @@
  */
 import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand } from '@aws-sdk/client-iot';
 import { GetThingShadowCommand, IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
-import { IotData } from 'aws-sdk';
 
 import { Router } from "express";
 const router = Router();
@@ -48,6 +47,23 @@ router.get('/list', async(req:any, res:any)=>{
         var command = new ListThingsCommand( {maxResults:20} );
         var response = await AWSIoTClient.send( command );
         return res.send( response.things );
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
+    }
+});
+
+/*  
+ *  Get Thing Description
+ */
+router.get('/description', async(req:any, res:any)=>{
+    // Thing name in URL parameters
+    if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
+
+    try{
+        const command = new DescribeThingCommand({thingName:req.query.thingName});
+        const response = await AWSIoTClient.send( command );
+        return res.send(response);
     }
     catch(err:any){
         return res.status(500).send({message:err.name+': '+err.message});
