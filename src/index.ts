@@ -17,12 +17,13 @@
  *      https://honesw.com/blog/how-to-see-an-ssl-certificate-https-on-an-elastic-beanstalk-environment-without-a-load-balancer
  */
 
-
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';  // parse cookies from requests
 // API routes
 import userRoutes from './routes/user';
 import thingRoutes from './routes/things';
+import { user_createNewUser } from './user';
 
 
 /* Express API server */
@@ -30,6 +31,7 @@ const app = express();
 // Express tools
 app.use(express.json());        // JSON API
 app.use(cors({origin:'*'}));    // Cross-origin references
+app.use(cookieParser());        // for the cookies (jwt)
 // Use the API Routers
 app.use('/api/user', userRoutes );
 app.use('/api/things', thingRoutes );
@@ -40,3 +42,5 @@ app.get('*', (req:any, res:any)=>{
 });
 // Start the webserver
 app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeBerry Asset Manager backend running on port '+8081+'\x1b[30m')});
+
+//user_createNewUser( 'sanne.santens@gmail.com', 'introception', 'Sanne');
