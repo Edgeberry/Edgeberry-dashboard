@@ -104,7 +104,7 @@ router.get('/index', async(req:any, res:any)=>{
 });
 
 /* Get Shadow of a specific thing */
-router.get('/thingshadow', async(req:any, res:any)=>{
+router.get('/shadow', async(req:any, res:any)=>{
     // Thing name in URL parameters
     if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
 
@@ -113,9 +113,8 @@ router.get('/thingshadow', async(req:any, res:any)=>{
         if( !await user_getUserFromCookie( req.cookies.jwt) )
         return res.status(403).send({message:'Unauthorized'});
         // Create and execute the 'get thing shadow' command
-        const command = new GetThingShadowCommand({thingName:req.query.thingName})
+        const command = new GetThingShadowCommand({thingName:req.query.thingName, shadowName:'edgeberry-device'})
         const response = await AWSDataPlaneClient.send( command );
-
         if( response.payload )
         return res.send(JSON.parse( new TextDecoder().decode(response.payload)));
 
