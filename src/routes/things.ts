@@ -25,7 +25,7 @@
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
 import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand } from '@aws-sdk/client-iot';
-import { GetThingShadowCommand, IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
+import { GetThingShadowCommand, IoTDataPlaneClient, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 
 import { Router } from "express";
 import { user_getUserFromCookie } from '../user';
@@ -124,5 +124,65 @@ router.get('/shadow', async(req:any, res:any)=>{
         return res.status(500).send({message:err.name});
     }
 });
+
+/*
+ *  Direct Method
+ *  Invoke a remote command on your IoT device
+ * 
+ *  https://docs.aws.amazon.com/wellarchitected/latest/iot-lens/device-commands.html
+ *  https://docs.aws.amazon.com/iot/latest/apireference/API_iotdata_Publish.html
+ *  
+ */
+
+router.post('/directmethod', (req:any, res:any)=>{
+    // Check for the presence of all required data
+    if( typeof(req.body) !== 'object' ||
+        typeof(req.body.deviceId) !== 'string' ||
+        typeof(req.body.methodName) !== 'string' ||
+        typeof(req.body.methodBody) !== 'string')
+    return res.status(401).send({message:'Data invalid'});
+    
+    invokeDirectMethod( req.body.deviceId, req.body.methodName, req.body.methodBody )
+        .then((response)=>{
+            //console.log(response)
+            return res.send(response);
+        })
+        .catch((err:any)=>{
+            //console.log(err)
+            return res.status(500).send({message:err.toString()});
+        });
+});
+
+// Send Command (direct method) to device
+function invokeDirectMethod( deviceId:string, methodName:string, methodBody:string ){
+    return new Promise<object|string>( async(resolve, reject)=>{
+        const requestId =  crypto.randomUUID();
+        const payload = JSON.stringify({
+            name: methodName,
+            body: methodBody
+        });
+
+        const input:PublishRequest = {
+            topic:'$aws/things/'+deviceId+'/methods/post',
+            qos: 0,
+            retain: false,
+            payload: Buffer.from(payload),
+            payloadFormatIndicator: 'UTF8_DATA',
+            contentType: 'application/json',
+            responseTopic: '$aws/things/'+deviceId+'/methods/response',
+            correlationData: btoa(requestId),
+            messageExpiry: 5000
+        }
+
+        try{
+            const command = new PublishCommand(input);
+            const response = await AWSDataPlaneClient.send(command);
+            resolve(response);
+        }
+        catch(err){
+            reject(err);
+        }
+    });
+}
 
 export default router;
