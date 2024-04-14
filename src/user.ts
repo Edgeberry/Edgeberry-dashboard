@@ -13,6 +13,7 @@ const userTable = 'edgeberry-io-users';
 const dynamoClient = new DynamoDBClient({
     region: 'eu-north-1'
 });
+
 // DynamoDB document client
 const documentClient = DynamoDBDocumentClient.from(dynamoClient);
 
@@ -76,14 +77,12 @@ export function user_getAwsCredentials( uid:string ){
         try{
             const response:any = await documentClient.send(command);
             if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items ){
-                console.log(response.Items[0]);
                 const credentials = {
                     endpoint: response.Items[0].credentials.M.endpoint.S,
                     region: response.Items[0].credentials.M.region.S,
                     accessKeyId: response.Items[0].credentials.M.accessKeyId.S,
                     secretAccessKey: response.Items[0].credentials.M.secretAccessKey.S
                 }
-                console.log(credentials);
                 return resolve(credentials);
             }
             else return resolve(null);
@@ -121,7 +120,6 @@ export function user_updateAwsCredentials( uid:string, endpoint:string, region:s
 
         try{
             const response = await documentClient.send(command);
-            console.log(response);
             return resolve(response);
         }
         catch(err){

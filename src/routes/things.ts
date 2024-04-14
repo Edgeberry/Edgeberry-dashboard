@@ -28,28 +28,29 @@ import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand 
 import { GetThingShadowCommand, IoTDataPlaneClient, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 
 import { Router } from "express";
-import { user_getUserFromCookie } from '../user';
+import { user_getAwsCredentials, user_getUserFromCookie } from '../user';
 const router = Router();
-
-const iotClientConfig = {
-    region: 'eu-north-1',
-    credentials:{
-        accessKeyId: 'AKIA6ODU6EBXB34OVH7O',
-        secretAccessKey: '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'
-    }
-}
-
-
 
 
 /* Get list of all things */
 router.get('/list', async(req:any, res:any)=>{
     try{
-        // Check for an authenticated user
-        if( !await user_getUserFromCookie(req.cookies.jwt) )
-        return res.status(403).send({message:'Unauthorized'});
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create the config from the authenticated user's settings
+        const awsSettings:any = await user_getAwsCredentials( user.uid );
+
+        const config = {
+            region: awsSettings.region,
+            credentials:{
+                accessKeyId: awsSettings.accessKeyId,
+                secretAccessKey: awsSettings.secretAccessKey
+            }
+        }
+        
         // Create a new client
-        const AWSIoTClient = new IoTClient( iotClientConfig );
+        const AWSIoTClient = new IoTClient( config );
         // Create and execute the 'list things' command
         var command = new ListThingsCommand( {maxResults:20} );
         var response = await AWSIoTClient.send( command );
@@ -69,11 +70,21 @@ router.get('/description', async(req:any, res:any)=>{
     return res.status(400).send({message:"No thingName"});
 
     try{
-        // Check for an authenticated user
-        if( !await user_getUserFromCookie(req.cookies.jwt) )
-        return res.status(403).send({message:'Unauthorized'});
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create the config from the authenticated user's settings
+        const awsSettings:any = await user_getAwsCredentials( user.uid );
+
+        const config = {
+            region: awsSettings.region,
+            credentials:{
+                accessKeyId: awsSettings.accessKeyId,
+                secretAccessKey: awsSettings.secretAccessKey
+            }
+        }
         // Create a new client
-        const AWSIoTClient = new IoTClient( iotClientConfig );
+        const AWSIoTClient = new IoTClient( config );
         // Create and execute the 'describe thing' command
         const command = new DescribeThingCommand({thingName:req.query.thingName});
         const response = await AWSIoTClient.send( command );
@@ -93,11 +104,21 @@ router.get('/index', async(req:any, res:any)=>{
     if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
 
     try{
-        // Check for an authenticated user
-        if( !await user_getUserFromCookie(req.cookies.jwt) )
-        return res.status(403).send({message:'Unauthorized'});
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create the config from the authenticated user's settings
+        const awsSettings:any = await user_getAwsCredentials( user.uid );
+
+        const config = {
+            region: awsSettings.region,
+            credentials:{
+                accessKeyId: awsSettings.accessKeyId,
+                secretAccessKey: awsSettings.secretAccessKey
+            }
+        }
         // Create a new client
-        const AWSIoTClient = new IoTClient( iotClientConfig );
+        const AWSIoTClient = new IoTClient( config );
         // Create and execute the 'search index' command
         const command = new SearchIndexCommand({queryString:'thingName:'+req.query.thingName});
         const response = await AWSIoTClient.send( command );
@@ -117,11 +138,21 @@ router.get('/shadow', async(req:any, res:any)=>{
     if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
 
     try{
-        // Check for an authenticated user
-        if( !await user_getUserFromCookie( req.cookies.jwt) )
-        return res.status(403).send({message:'Unauthorized'});
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create the config from the authenticated user's settings
+        const awsSettings:any = await user_getAwsCredentials( user.uid );
+
+        const config = {
+            region: awsSettings.region,
+            credentials:{
+                accessKeyId: awsSettings.accessKeyId,
+                secretAccessKey: awsSettings.secretAccessKey
+            }
+        }
         // Create a new Data Plane client
-        const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
+        const AWSDataPlaneClient = new IoTDataPlaneClient( config );
         // Create and execute the 'get thing shadow' command
         const command = new GetThingShadowCommand({thingName:req.query.thingName, shadowName:'edgeberry-device'})
         const response = await AWSDataPlaneClient.send( command );
@@ -144,15 +175,29 @@ router.get('/shadow', async(req:any, res:any)=>{
  *  
  */
 
-router.post('/directmethod', (req:any, res:any)=>{
+router.post('/directmethod', async(req:any, res:any)=>{
     // Check for the presence of all required data
     if( typeof(req.body) !== 'object' ||
         typeof(req.body.deviceId) !== 'string' ||
         typeof(req.body.methodName) !== 'string' ||
         typeof(req.body.methodBody) !== 'string')
     return res.status(401).send({message:'Data invalid'});
+
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create the config from the authenticated user's settings
+        const awsSettings:any = await user_getAwsCredentials( user.uid );
+
+        const config = {
+            region: awsSettings.region,
+            credentials:{
+                accessKeyId: awsSettings.accessKeyId,
+                secretAccessKey: awsSettings.secretAccessKey
+            }
+        }
     
-    invokeDirectMethod( req.body.deviceId, req.body.methodName, req.body.methodBody )
+    invokeDirectMethod( config, req.body.deviceId, req.body.methodName, req.body.methodBody )
         .then((response)=>{
             //console.log(response)
             return res.send(response);
@@ -164,7 +209,7 @@ router.post('/directmethod', (req:any, res:any)=>{
 });
 
 // Send Command (direct method) to device
-function invokeDirectMethod( deviceId:string, methodName:string, methodBody:string ){
+function invokeDirectMethod( config:any, deviceId:string, methodName:string, methodBody:string ){
     return new Promise<object|string>( async(resolve, reject)=>{
         const requestId =  crypto.randomUUID();
         const payload = JSON.stringify({
@@ -186,7 +231,7 @@ function invokeDirectMethod( deviceId:string, methodName:string, methodBody:stri
 
         try{
             // Create a new Data Plane client
-            const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
+            const AWSDataPlaneClient = new IoTDataPlaneClient( config );
 
             const command = new PublishCommand(input);
             const response = await AWSDataPlaneClient.send(command);
