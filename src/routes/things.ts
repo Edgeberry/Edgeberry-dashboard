@@ -32,11 +32,13 @@ import { user_getUserFromCookie } from '../user';
 const router = Router();
 
 const iotClientConfig = {
-    region: 'eu-north-1'
+    region: 'eu-north-1',
+    credentials:{
+        accessKeyId: 'AKIA6ODU6EBXB34OVH7O',
+        secretAccessKey: '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'
+    }
 }
 
-const AWSIoTClient = new IoTClient( iotClientConfig );
-const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
 
 
 
@@ -46,6 +48,8 @@ router.get('/list', async(req:any, res:any)=>{
         // Check for an authenticated user
         if( !await user_getUserFromCookie(req.cookies.jwt) )
         return res.status(403).send({message:'Unauthorized'});
+        // Create a new client
+        const AWSIoTClient = new IoTClient( iotClientConfig );
         // Create and execute the 'list things' command
         var command = new ListThingsCommand( {maxResults:20} );
         var response = await AWSIoTClient.send( command );
@@ -68,6 +72,8 @@ router.get('/description', async(req:any, res:any)=>{
         // Check for an authenticated user
         if( !await user_getUserFromCookie(req.cookies.jwt) )
         return res.status(403).send({message:'Unauthorized'});
+        // Create a new client
+        const AWSIoTClient = new IoTClient( iotClientConfig );
         // Create and execute the 'describe thing' command
         const command = new DescribeThingCommand({thingName:req.query.thingName});
         const response = await AWSIoTClient.send( command );
@@ -90,6 +96,8 @@ router.get('/index', async(req:any, res:any)=>{
         // Check for an authenticated user
         if( !await user_getUserFromCookie(req.cookies.jwt) )
         return res.status(403).send({message:'Unauthorized'});
+        // Create a new client
+        const AWSIoTClient = new IoTClient( iotClientConfig );
         // Create and execute the 'search index' command
         const command = new SearchIndexCommand({queryString:'thingName:'+req.query.thingName});
         const response = await AWSIoTClient.send( command );
@@ -112,6 +120,8 @@ router.get('/shadow', async(req:any, res:any)=>{
         // Check for an authenticated user
         if( !await user_getUserFromCookie( req.cookies.jwt) )
         return res.status(403).send({message:'Unauthorized'});
+        // Create a new Data Plane client
+        const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
         // Create and execute the 'get thing shadow' command
         const command = new GetThingShadowCommand({thingName:req.query.thingName, shadowName:'edgeberry-device'})
         const response = await AWSDataPlaneClient.send( command );
@@ -175,6 +185,9 @@ function invokeDirectMethod( deviceId:string, methodName:string, methodBody:stri
         }
 
         try{
+            // Create a new Data Plane client
+            const AWSDataPlaneClient = new IoTDataPlaneClient( iotClientConfig );
+
             const command = new PublishCommand(input);
             const response = await AWSDataPlaneClient.send(command);
             resolve(response);

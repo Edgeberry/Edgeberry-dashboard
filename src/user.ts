@@ -3,7 +3,7 @@
  */
 
 import { DynamoDBClient, ScanCommand  } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
 import * as bcrypt from 'bcryptjs';             // for password encryption (hashing with a salt)
 import * as jwt from 'jsonwebtoken';
 
@@ -49,6 +49,79 @@ export async function user_createNewUser( email:string, password:string, usernam
 
         try{
             const response = await documentClient.send(command);
+            return resolve(response);
+        }
+        catch(err){
+            return reject(err);
+        }
+    })
+}
+
+
+/* Get User's AWS credentials */
+export function user_getAwsCredentials( uid:string ){
+    return new Promise( async(resolve, reject)=>{
+        // Create the query command
+        const command = new ScanCommand({
+            TableName: userTable,
+            FilterExpression:
+              "uid = :id",
+            ExpressionAttributeValues: {
+              ":id": {"S":uid}
+            },
+            ConsistentRead: true,
+            Limit: 1                        // limit the query to 1 result
+          });
+        // Execute the query command
+        try{
+            const response:any = await documentClient.send(command);
+            if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items ){
+                console.log(response.Items[0]);
+                const credentials = {
+                    endpoint: response.Items[0].credentials.M.endpoint.S,
+                    region: response.Items[0].credentials.M.region.S,
+                    accessKeyId: response.Items[0].credentials.M.accessKeyId.S,
+                    secretAccessKey: response.Items[0].credentials.M.secretAccessKey.S
+                }
+                console.log(credentials);
+                return resolve(credentials);
+            }
+            else return resolve(null);
+        }
+        catch(err){
+            return reject(err);
+        }
+    })
+}
+
+
+/* Update User's AWS credentials */
+export function user_updateAwsCredentials( uid:string, endpoint:string, region:string, accessKeyId:string, secretAccessKey:string ){
+    return new Promise( async(resolve, reject)=>{
+        // Check for the user's existence
+        const user = await user_findById( uid ).catch((err)=>{return reject(err)});
+        if( !user ) return reject('User does not exist');
+
+        // Create the command to update the user's AWS credentials
+        const command = new UpdateCommand({
+            TableName: userTable,
+            Key:{
+                uid:uid
+            },
+            UpdateExpression:'set credentials = :credentials',
+            ExpressionAttributeValues: {
+                ':credentials':{
+                    endpoint: endpoint,
+                    region: region,
+                    accessKeyId: accessKeyId,
+                    secretAccessKey: secretAccessKey
+                }
+            }
+        });
+
+        try{
+            const response = await documentClient.send(command);
+            console.log(response);
             return resolve(response);
         }
         catch(err){
