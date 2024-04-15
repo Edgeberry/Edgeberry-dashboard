@@ -29,7 +29,7 @@ export async function encryptData( value:string ){
 export async function user_createNewUser( email:string, password:string, username:string ){
     return new Promise( async(resolve, reject)=>{
         // check if the e-mail address is already in the database, because this uniquely
-        // identifies this user account.
+        // identifies this user.
         const user:any = await user_findByEmail( email )
             .catch(()=>{
                 return reject('Lookup failed');

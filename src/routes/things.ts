@@ -25,7 +25,7 @@
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
 import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand } from '@aws-sdk/client-iot';
-import { GetThingShadowCommand, IoTDataPlaneClient, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
+import { GetRetainedMessageCommand, GetThingShadowCommand, IoTDataPlaneClient, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 
 import { Router } from "express";
 import { user_getAwsCredentials, user_getUserFromCookie } from '../user';
@@ -210,7 +210,7 @@ router.post('/directmethod', async(req:any, res:any)=>{
 
 // Send Command (direct method) to device
 function invokeDirectMethod( config:any, deviceId:string, methodName:string, methodBody:string ){
-    return new Promise<object|string>( async(resolve, reject)=>{
+    return new Promise<object|string>( (resolve, reject)=>{
         const requestId =  crypto.randomUUID();
         const payload = JSON.stringify({
             name: methodName,
@@ -218,13 +218,13 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
         });
 
         const input:PublishRequest = {
-            topic:'$aws/things/'+deviceId+'/methods/post',
+            topic:'edgeberry/things/'+deviceId+'/methods/post',
             qos: 0,
             retain: false,
             payload: Buffer.from(payload),
             payloadFormatIndicator: 'UTF8_DATA',
             contentType: 'application/json',
-            responseTopic: '$aws/things/'+deviceId+'/methods/response',
+            responseTopic: 'edgeberry/things/'+deviceId+'/methods/response',
             correlationData: btoa(requestId),
             messageExpiry: 5000
         }
@@ -234,8 +234,30 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
             const AWSDataPlaneClient = new IoTDataPlaneClient( config );
 
             const command = new PublishCommand(input);
-            const response = await AWSDataPlaneClient.send(command);
-            resolve(response);
+            AWSDataPlaneClient.send(command, (error)=>{
+                if(error) return reject(error);
+
+                // Response
+                // We cannot directly subscribe directly to the response topic for the direct methods, because the AWS SDK
+                // works with HTTP calls. So this workaround for getting the response is working with retained messages, and
+                // assumes the latest response message is the response to this method invokation.
+                //      retained messages:
+                //      https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot-data-plane/command/GetRetainedMessageCommand/
+
+                const retainedMessageInput = {topic:'edgeberry/things/'+deviceId+'/methods/response'};
+                const retainedMessageCmd = new GetRetainedMessageCommand(retainedMessageInput);
+                setTimeout(async()=>{
+                    try{
+                        const result = await AWSDataPlaneClient.send(retainedMessageCmd)
+                        const payload = new TextDecoder().decode(result.payload);
+                        return resolve(JSON.parse(payload));
+                    } catch(err){
+                        return reject(err);
+                    }
+                },2000);
+            });
+
+
         }
         catch(err){
             reject(err);
