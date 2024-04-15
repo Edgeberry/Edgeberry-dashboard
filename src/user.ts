@@ -8,11 +8,15 @@ import * as bcrypt from 'bcryptjs';             // for password encryption (hash
 import * as jwt from 'jsonwebtoken';
 
 const userTable = 'edgeberry-io-users';
-
+var dynamoClient;
 // DynamoDB client
-const dynamoClient = new DynamoDBClient({
-    region: 'eu-north-1'
-});
+if( process.env.DYNAMO_CONF ){
+    console.log("Initializing DynamoDB client for development");
+    dynamoClient = new DynamoDBClient(JSON.parse((process.env.DYNAMO_CONF).toString()));
+}
+else{
+    dynamoClient = new DynamoDBClient();
+}
 
 // DynamoDB document client
 const documentClient = DynamoDBDocumentClient.from(dynamoClient);
