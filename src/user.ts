@@ -15,8 +15,9 @@ if( process.env.DYNAMO_CONF ){
     dynamoClient = new DynamoDBClient(JSON.parse((process.env.DYNAMO_CONF).toString()));
 }
 else{
-    dynamoClient = new DynamoDBClient();
+    dynamoClient = new DynamoDBClient({region: 'eu-north-1'});
 }
+
 
 // DynamoDB document client
 const documentClient = DynamoDBDocumentClient.from(dynamoClient);
