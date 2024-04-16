@@ -265,12 +265,13 @@ router.post('/directmethod', async(req:any, res:any)=>{
 });
 
 // Send Command (direct method) to device
-function invokeDirectMethod( config:any, deviceId:string, methodName:string, methodBody:string ){
+function invokeDirectMethod( config:any, deviceId:string, methodName:string, methodBody:string, timeout?:number ){
     return new Promise<object|string>( (resolve, reject)=>{
         const requestId =  crypto.randomUUID();
         const payload = JSON.stringify({
             name: methodName,
-            body: methodBody
+            body: methodBody,
+            requestId: requestId
         });
 
         const input:PublishRequest = {
@@ -302,15 +303,29 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
 
                 const retainedMessageInput = {topic:'edgeberry/things/'+deviceId+'/methods/response'};
                 const retainedMessageCmd = new GetRetainedMessageCommand(retainedMessageInput);
-                setTimeout(async()=>{
+
+                // Watchdog: if there's no result after a timeout, reject.
+                var watchdog = setTimeout(()=>{
+                    clearInterval(pollingInterval);
+                    return reject("Response timed out");
+                },timeout?timeout*1000:10*1000);
+
+                // Poll the retained message on the method response topic
+                // for a response to our request (by requestId)
+                var pollingInterval = setInterval(async()=>{
                     try{
                         const result = await AWSDataPlaneClient.send(retainedMessageCmd)
-                        const payload = new TextDecoder().decode(result.payload);
-                        return resolve(JSON.parse(payload));
+                        const payload = JSON.parse(new TextDecoder().decode(result.payload));
+                        if( payload.requestId === requestId ){
+                            clearInterval(pollingInterval);
+                            clearTimeout(watchdog);
+                            return resolve(payload);
+                        }
                     } catch(err){
                         return reject(err);
                     }
-                },2000);
+                },700);
+                
             });
 
 
