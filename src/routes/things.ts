@@ -24,7 +24,7 @@
  *            To view the connection state:
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
-import { DescribeThingCommand, IoTClient, ListThingsCommand, SearchIndexCommand } from '@aws-sdk/client-iot';
+import { DeleteCertificateCommand, DeleteThingCommand, DescribeThingCommand, DetachThingPrincipalCommand, IoTClient, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand } from '@aws-sdk/client-iot';
 import { GetRetainedMessageCommand, GetThingShadowCommand, IoTDataPlaneClient, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 
 import { Router } from "express";
@@ -95,6 +95,62 @@ router.get('/description', async(req:any, res:any)=>{
     }
 });
 
+/*  
+ *  Delete Thing
+ *  https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/DeleteThingCommand/
+ *  https://stackoverflow.com/questions/36003491/how-to-delete-aws-iot-things-and-policies
+ */
+router.post('/delete', async(req:any, res:any)=>{
+    // Thing name in URL parameters
+    if( typeof req.query.thingName !== 'string')
+    return res.status(400).send({message:"No thingName"});
+
+    try{
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create the config from the authenticated user's settings
+        const awsSettings:any = await user_getAwsCredentials( user.uid );
+        // Create the AWS IoT Client configuration
+        const config = {
+            region: awsSettings.region,
+            credentials:{
+                accessKeyId: awsSettings.accessKeyId,
+                secretAccessKey: awsSettings.secretAccessKey
+            }
+        }
+        // Create a new AWS IoT client
+        const AWSIoTClient = new IoTClient( config );
+        // List Thing principals
+        const listThingPrincipalsCommand = new ListThingPrincipalsCommand({thingName:req.query.thingName});
+        const thingPrincipals = await AWSIoTClient.send( listThingPrincipalsCommand );
+        console.log(thingPrincipals);
+        // Detach all thing principals
+        if( thingPrincipals.principals )
+        for( const principal of thingPrincipals.principals){
+            // Detach the certificate
+            const detachThingPrincipalCommand = new DetachThingPrincipalCommand({thingName:req.query.thingName, principal:principal});
+            await AWSIoTClient.send( detachThingPrincipalCommand );
+            // Get the certificate from the principal
+            const certificateId = principal.split('/').pop();
+            //console.log(certificateId)
+            // Deactivate the certificate (before deletion)
+            const deactivateCertificateCommand = new UpdateCertificateCommand({certificateId:certificateId, newStatus:'INACTIVE'});
+            await AWSIoTClient.send( deactivateCertificateCommand );
+            // TODO: Delete certificate
+            //const deleteCertificateCommand = new DeleteCertificateCommand({certificateId:certificateId})
+            //AWSIoTClient.send( deleteCertificateCommand );
+        };
+
+        //Create and execute the 'delete thing' command
+        const deleteThingcommand = new DeleteThingCommand({thingName:req.query.thingName});
+        const response = await AWSIoTClient.send( deleteThingcommand );
+        return res.send(response);
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
+    }
+});
 /*  
  *  Get thing Fleet index
  *  Get the Fleet index by Thing name. Fleet indexing must be enabled (!)
