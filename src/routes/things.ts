@@ -301,7 +301,7 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
                 //      retained messages:
                 //      https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot-data-plane/command/GetRetainedMessageCommand/
 
-                const retainedMessageInput = {topic:'edgeberry/things/'+deviceId+'/methods/response'};
+                const retainedMessageInput = {topic:'edgeberry/things/'+deviceId+'/methods/response/'+requestId};
                 const retainedMessageCmd = new GetRetainedMessageCommand(retainedMessageInput);
 
                 // Watchdog: if there's no result after a timeout, reject.
@@ -319,12 +319,27 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
                         if( payload.requestId === requestId ){
                             clearInterval(pollingInterval);
                             clearTimeout(watchdog);
+
+                            // Clear the retained message on the response topic
+                            const input:PublishRequest = {
+                                topic:'edgeberry/things/'+deviceId+'/methods/request/'+requestId,
+                                qos: 0,
+                                retain: false,                          // no retain
+                                payload: Buffer.from(''),               // empty buffer
+                                payloadFormatIndicator: 'UTF8_DATA',
+                                contentType: 'application/json',
+                                correlationData: btoa(requestId),
+                                messageExpiry: 5000
+                            }
+                            const command = new PublishCommand(input);
+                            AWSDataPlaneClient.send(command);
+                            // Done, resolve!
                             return resolve(payload);
                         }
                     } catch(err){
                         return reject(err);
                     }
-                },700);
+                },300);
                 
             });
 
