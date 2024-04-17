@@ -322,7 +322,7 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
 
                             // Clear the retained message on the response topic
                             const input:PublishRequest = {
-                                topic:'edgeberry/things/'+deviceId+'/methods/request/'+requestId,
+                                topic:'edgeberry/things/'+deviceId+'/methods/response/'+requestId,
                                 qos: 0,
                                 retain: true,                           // A retained message with a
                                 payload: Buffer.from(''),               // zero-byte payload clears the
