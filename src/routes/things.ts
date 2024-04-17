@@ -274,80 +274,68 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
             requestId: requestId
         });
 
+        // Create a new Data Plane client
+        const AWSDataPlaneClient = new IoTDataPlaneClient( config );
+
+        // Create the publish request input
         const input:PublishRequest = {
             topic:'edgeberry/things/'+deviceId+'/methods/post',
             qos: 0,
-            retain: false,
             payload: Buffer.from(payload),
             payloadFormatIndicator: 'UTF8_DATA',
             contentType: 'application/json',
-            responseTopic: 'edgeberry/things/'+deviceId+'/methods/response',
-            correlationData: btoa(requestId),
             messageExpiry: 5000
         }
+        // Create and send the publish request command
+        const command = new PublishCommand(input);
+        AWSDataPlaneClient.send(command, (error)=>{
+            if(error) return reject(error);
+            // Response
+            // We cannot directly subscribe directly to the response topic for the direct methods, because the AWS SDK
+            // works with HTTP calls. So this workaround for getting the response is working with retained messages, published
+            // on a response topic with the request ID.
+            //
+            //      retained messages:
+            //      https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot-data-plane/command/GetRetainedMessageCommand/
 
-        try{
-            // Create a new Data Plane client
-            const AWSDataPlaneClient = new IoTDataPlaneClient( config );
-
-            const command = new PublishCommand(input);
-            AWSDataPlaneClient.send(command, (error)=>{
-                if(error) return reject(error);
-
-                // Response
-                // We cannot directly subscribe directly to the response topic for the direct methods, because the AWS SDK
-                // works with HTTP calls. So this workaround for getting the response is working with retained messages, and
-                // assumes the latest response message is the response to this method invokation.
-                //      retained messages:
-                //      https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot-data-plane/command/GetRetainedMessageCommand/
-
-                const retainedMessageInput = {topic:'edgeberry/things/'+deviceId+'/methods/response/'+requestId};
-                const retainedMessageCmd = new GetRetainedMessageCommand(retainedMessageInput);
-
-                // Watchdog: if there's no result after a timeout, reject.
-                var watchdog = setTimeout(()=>{
+            // Watchdog: if there's no result after a timeout, reject.
+            var watchdog = setTimeout(()=>{
+                clearInterval(pollingInterval);
+                return reject("Response timed out");
+            },timeout?timeout*1000:10*1000);
+            // Create the command to listen for the retained message on the response topic
+            const retainedMessageInput = {topic:'edgeberry/things/'+deviceId+'/methods/response/'+requestId};
+            const retainedMessageCmd = new GetRetainedMessageCommand(retainedMessageInput);
+            // Poll the retained message on the response topic
+            // for a response to our request (by requestId)
+            var pollingInterval = setInterval(async()=>{
+            AWSDataPlaneClient.send(retainedMessageCmd).then((result)=>{
+                const payload = JSON.parse(new TextDecoder().decode(result.payload));
+                if( payload.requestId === requestId ){
+                    // Clear the watchdog and the polling interval
                     clearInterval(pollingInterval);
-                    return reject("Response timed out");
-                },timeout?timeout*1000:10*1000);
-
-                // Poll the retained message on the method response topic
-                // for a response to our request (by requestId)
-                var pollingInterval = setInterval(async()=>{
-                    try{
-                        const result = await AWSDataPlaneClient.send(retainedMessageCmd)
-                        const payload = JSON.parse(new TextDecoder().decode(result.payload));
-                        if( payload.requestId === requestId ){
-                            clearInterval(pollingInterval);
-                            clearTimeout(watchdog);
-
-                            // Clear the retained message on the response topic
-                            const input:PublishRequest = {
-                                topic:'edgeberry/things/'+deviceId+'/methods/response/'+requestId,
-                                qos: 0,
-                                retain: true,                           // A retained message with a
-                                payload: Buffer.from(''),               // zero-byte payload clears the
-                                payloadFormatIndicator: 'UTF8_DATA',    // previously retained messsage!
-                                contentType: 'application/json',
-                                correlationData: btoa(requestId),
-                                messageExpiry: 5000
-                            }
-                            const command = new PublishCommand(input);
-                            AWSDataPlaneClient.send(command);
-                            // Done, resolve!
-                            return resolve(payload);
-                        }
-                    } catch(err){
-                        return reject(err);
+                    clearTimeout(watchdog);
+                    // Clear the retained message on the response topic
+                    const input:PublishRequest = {
+                        topic:'edgeberry/things/'+deviceId+'/methods/response/'+requestId,
+                        qos: 0,
+                        retain: true,                           // A retained message with a
+                        payload: Buffer.from(''),               // zero-byte payload clears the
+                        payloadFormatIndicator: 'UTF8_DATA',    // previously retained messsage!
+                        contentType: 'application/json',
+                        messageExpiry: 5000
                     }
-                },300);
-                
-            });
-
-
-        }
-        catch(err){
-            reject(err);
-        }
+                    const command = new PublishCommand(input);
+                    AWSDataPlaneClient.send(command);
+                    // Done, resolve!
+                    return resolve(payload);
+                    }
+                })
+                // Do nothing with these errors, but to prevent crashing on
+                // 'retained message not found'-like errors, we'll catch them.
+                .catch(()=>{});    
+            },300);
+        });
     });
 }
 
