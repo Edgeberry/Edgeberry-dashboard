@@ -324,9 +324,9 @@ function invokeDirectMethod( config:any, deviceId:string, methodName:string, met
                             const input:PublishRequest = {
                                 topic:'edgeberry/things/'+deviceId+'/methods/request/'+requestId,
                                 qos: 0,
-                                retain: false,                          // no retain
-                                payload: Buffer.from(''),               // empty buffer
-                                payloadFormatIndicator: 'UTF8_DATA',
+                                retain: true,                           // A retained message with a
+                                payload: Buffer.from(''),               // zero-byte payload clears the
+                                payloadFormatIndicator: 'UTF8_DATA',    // previously retained messsage!
                                 contentType: 'application/json',
                                 correlationData: btoa(requestId),
                                 messageExpiry: 5000
