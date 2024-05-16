@@ -27,7 +27,7 @@ router.post('/login', async(req:any, res:any)=>{
             httpOnly: true,         // important for security - the front-end is not able to access the cookie
 	        secure: true,		    // only over HTTPS
 	        sameSite: true,		    // only send for requests to the same FQDN
-            maxAge: 2*60*60*1000    // valid for 2 hours
+            maxAge: 24*60*60*1000    // valid for 24 hours
         });
 
         return res.send({message:'success'});

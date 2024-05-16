@@ -36,7 +36,7 @@ const router = Router();
 router.get('/list', async(req:any, res:any)=>{
     try{
         // Get the authenticated user
-        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        const user:any = await user_getUserFromCookie(req.cookies.jwt);
         if( !user ) return res.status(403).send({message:'Unauthorized'});
         // Create the config from the authenticated user's settings
         const awsSettings:any = await user_getAwsCredentials( user.uid );
@@ -238,7 +238,7 @@ router.post('/directmethod', async(req:any, res:any)=>{
         typeof(req.body.methodName) !== 'string' ||
         typeof(req.body.methodBody) !== 'string')
     return res.status(401).send({message:'Data invalid'});
-
+    try{
         // Get the authenticated user
         const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
         if( !user ) return res.status(403).send({message:'Unauthorized'});
@@ -253,15 +253,19 @@ router.post('/directmethod', async(req:any, res:any)=>{
             }
         }
     
-    invokeDirectMethod( config, req.body.deviceId, req.body.methodName, req.body.methodBody )
-        .then((response)=>{
-            //console.log(response)
-            return res.send(response);
-        })
-        .catch((err:any)=>{
-            //console.log(err)
-            return res.status(500).send({message:err.toString()});
-        });
+        invokeDirectMethod( config, req.body.deviceId, req.body.methodName, req.body.methodBody )
+            .then((response)=>{
+                //console.log(response)
+                return res.send(response);
+            })
+            .catch((err:any)=>{
+                //console.log(err)
+                return res.status(500).send({message:err.toString()});
+            });
+    } 
+    catch(err:any){
+        return res.status(500).send({message:err.name});
+    }
 });
 
 // Send Command (direct method) to device
