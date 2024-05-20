@@ -1,6 +1,6 @@
 ![EdgeBerry](assets/EdgeBerry_banner.png)
 
-> "One _Dashboard_ to rule them all, one _Dashboard_ to find them, one _Dashboard_ to _connect_ them all, and _on the internet_ bind them"
+> **"One _Dashboard_ to rule them all, one _Dashboard_ to find them, one _Dashboard_ to _connect_ them all and _on the internet_ bind them"**
 
 The Edgeberry dashboard is an asset management platform for Edgeberry devices, available on [Edgeberry.io](https://edgeberry.io).
 
