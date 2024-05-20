@@ -4,7 +4,7 @@
 Server application for [EdgeBerry.io](https://edgeberry.io).
 
 ## License & Collaboration
-Copyright 2024 Sanne 'SpuQ' Santens. This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+**Copyright© 2024 Sanne 'SpuQ' Santens**. The Edgeberry Dashboard project is licensed under the **[GNU GPLv3](LICENSE.txt)**.
 
 If you'd like to contribute to this project, please follow these guidelines:
 1. Fork the repository and create your branch from `main`.
