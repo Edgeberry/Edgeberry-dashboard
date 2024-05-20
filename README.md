@@ -1,8 +1,8 @@
-![EdgeBerry](assets/EdgeBerry_banner.png)
+![EdgeBerry](assets/Edgeberry_banner.png)
 
 > **"One _Dashboard_ to rule them all, one _Dashboard_ to find them, one _Dashboard_ to _connect_ them all and _on the internet_ bind them"**
 
-The Edgeberry dashboard is an asset management platform for Edgeberry devices, available on [Edgeberry.io](https://edgeberry.io).
+The Edgeberry Dashboard is an online asset management platform for [Edgeberry devices](https://github.com/SpuQ/Edgeberry). The official Edgeberry Dasboard is available on [Edgeberry.io](https://edgeberry.io/dashboard).
 
 ![Edgeberry Dashboard screenshot](assets/Edgeberry-dashboard.png)
 
