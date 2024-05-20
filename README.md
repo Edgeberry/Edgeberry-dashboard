@@ -4,6 +4,8 @@
 
 The Edgeberry dashboard is an asset management platform for Edgeberry devices, available on [Edgeberry.io](https://edgeberry.io).
 
+![Edgeberry Dashboard screenshot](assets/Edgeberry-dashboard.png)
+
 ## License & Collaboration
 **Copyright© 2024 Sanne 'SpuQ' Santens**. The Edgeberry Dashboard project is licensed under the **[GNU GPLv3](LICENSE.txt)**.
 
