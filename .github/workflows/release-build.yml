@@ -30,10 +30,10 @@ jobs:
       - name: Download latest UI release asset
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: gh release download --repo SpuQ/EdgeBerry-io-UI --pattern "EdgeBerry-io-UI.tar.gz"
+        run: gh release download --repo SpuQ/Edgeberry-dashboard-UI --pattern "Edgeberry-dashboard-UI.tar.gz"
 
       - name: Unpack the UI in the public folder
-        run: mkdir ./tempdir/build/public; tar -xzf EdgeBerry-io-UI.tar.gz -C ./tempdir/build/public
+        run: mkdir ./tempdir/build/public; tar -xzf Edgeberry-dashboard-UI.tar.gz -C ./tempdir/build/public
 
       - name: Generate deployment package (zip it!)
         run: cd tempdir; zip -r ../deploy.zip ./*; cd ..
