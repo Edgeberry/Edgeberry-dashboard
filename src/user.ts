@@ -53,6 +53,7 @@ export async function user_createNewUser( email:string, password:string, usernam
 
 
 /* Get User's AWS credentials */
+/* OBSOLETE
 export function user_getAwsCredentials( uid:string ){
     return new Promise( async(resolve, reject)=>{
         // Create the query command
@@ -85,9 +86,10 @@ export function user_getAwsCredentials( uid:string ){
         }
     })
 }
-
+*/
 
 /* Update User's AWS credentials */
+/* OBSOLETE
 export function user_updateAwsCredentials( uid:string, endpoint:string, region:string, accessKeyId:string, secretAccessKey:string ){
     return new Promise( async(resolve, reject)=>{
         // Check for the user's existence
@@ -120,6 +122,7 @@ export function user_updateAwsCredentials( uid:string, endpoint:string, region:s
         }
     })
 }
+*/
 
 /* Find user by e-mail address */
 async function user_findByEmail( email:string ){

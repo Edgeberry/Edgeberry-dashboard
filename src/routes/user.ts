@@ -1,8 +1,8 @@
 /*
- *  REST API: Connectivity Routes
+ *  REST API: User Routes
  */
 import { Router } from "express";
-import { user_checkCredentials, user_getUserFromCookie, user_updateAwsCredentials, user_getAwsCredentials } from "../user";
+import { user_checkCredentials, user_getUserFromCookie } from "../user";
 import * as jwt from 'jsonwebtoken';
 const router = Router();
 
@@ -72,6 +72,7 @@ router.post('/user', async(req:any, res:any)=>{
 });
 
 /* Update user's AWS settings */
+/* OBSOLETE
 router.post('/awssettings', async(req:any, res:any)=>{
     if( typeof(req.body) !== 'object' ||
         typeof(req.body.endpoint) !== 'string' ||
@@ -93,6 +94,7 @@ router.post('/awssettings', async(req:any, res:any)=>{
 });
 
 /* Get user's AWS settings */
+/* OBSOLETE
 router.get('/awssettings', async(req:any, res:any)=>{
     try{
         const user:any = await user_getUserFromCookie(req.cookies.jwt);
@@ -104,5 +106,6 @@ router.get('/awssettings', async(req:any, res:any)=>{
         return res.status(500).send({message:err.toString()});
     }
 });
+*/
 
 export default router;
