@@ -25,6 +25,9 @@ import cookieParser from 'cookie-parser';  // parse cookies from requests
 // DynamoDB Client
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+// IoT Core Client
+import { IoTClient } from '@aws-sdk/client-iot';
+import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
 // API routes
 import userRoutes from './routes/user';
 import thingRoutes from './routes/things';
@@ -48,6 +51,7 @@ app.get('*', (req:any, res:any)=>{
 // Start the webserver
 app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeBerry Asset Manager backend running on port '+8081+'\x1b[30m')});
 
+
 /*
  *  DynamoDB Client
  */
@@ -63,3 +67,24 @@ else{
 
 // DynamoDB document client
 export const dynamoDocumentClient = DynamoDBDocumentClient.from(dynamoClient);
+
+/*
+ *  AWS IoT Core Client
+ */
+// Shadow name for the named device shadow
+export const edgeberryShadowName = 'edgeberry-device';
+
+let awsConfig:any;
+
+if( process.env.IOTCORE_CONF ){
+    console.log("Initializing IoT Core client for development");
+    awsConfig = JSON.parse((process.env.IOTCORE_CONF).toString())
+}
+else{
+    awsConfig = {region: 'eu-north-1'};
+}
+
+// Create the IoT Core client
+export const awsIotClient = new IoTClient( awsConfig );
+// Create a new Data Plane client
+export const awsDataPlaneClient = new IoTDataPlaneClient( awsConfig );
