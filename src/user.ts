@@ -1,26 +1,14 @@
 /*
  *  User related operations
  */
-
-import { DynamoDBClient, ScanCommand  } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
+import { dynamoDocumentClient as documentClient } from '.';
+import { ScanCommand  } from '@aws-sdk/client-dynamodb';
+import { PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
 import * as bcrypt from 'bcryptjs';             // for password encryption (hashing with a salt)
 import * as jwt from 'jsonwebtoken';
 
 const userTable = 'edgeberry-io-users';
-var dynamoClient;
-// DynamoDB client
-if( process.env.DYNAMO_CONF ){
-    console.log("Initializing DynamoDB client for development");
-    dynamoClient = new DynamoDBClient(JSON.parse((process.env.DYNAMO_CONF).toString()));
-}
-else{
-    dynamoClient = new DynamoDBClient({region: 'eu-north-1'});
-}
 
-
-// DynamoDB document client
-const documentClient = DynamoDBDocumentClient.from(dynamoClient);
 
 /* Encrypt */
 export async function encryptData( value:string ){
