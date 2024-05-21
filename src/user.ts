@@ -53,7 +53,7 @@ export async function user_createNewUser( email:string, password:string, usernam
 
 
 /* Get User's AWS credentials */
-/* OBSOLETE
+/* OBSOLETE - keeping these as example for now
 export function user_getAwsCredentials( uid:string ){
     return new Promise( async(resolve, reject)=>{
         // Create the query command

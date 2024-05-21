@@ -49,7 +49,7 @@ app.get('*', (req:any, res:any)=>{
     return res.sendFile('index.html',{ root: __dirname+'/public' });
 });
 // Start the webserver
-app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeBerry Asset Manager backend running on port '+8081+'\x1b[30m')});
+app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeberry Dashboard backend running on port '+8081+'\x1b[30m')});
 
 
 /*

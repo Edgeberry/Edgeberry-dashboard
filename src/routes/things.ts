@@ -46,6 +46,7 @@ router.get('/list', async(req:any, res:any)=>{
 
 /*  
  *  Get Thing Description
+ *  -> contains the attributes from 'Thing type'
  */
 router.get('/description', async(req:any, res:any)=>{
     // Thing name in URL parameters
@@ -63,6 +64,29 @@ router.get('/description', async(req:any, res:any)=>{
     }
     catch(err:any){
         return res.status(500).send({message:err.name+': '+err.message});
+    }
+});
+/*
+ * Update the device description
+ *
+ */
+router.post('/description', async(req:any, res:any)=>{
+    // Check for the presence of all required data
+    if( typeof(req.body) !== 'object' ||
+        typeof(req.body.deviceName) !== 'string' ||
+        typeof(req.body.deviceOwner) !== 'string' ||
+        typeof(req.body.deviceId) !== 'string')
+    return res.status(401).send({message:'Data invalid'});
+    try{
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+
+        // ToDo: update the description
+
+    } 
+    catch(err:any){
+        return res.status(500).send({message:err.name});
     }
 });
 
