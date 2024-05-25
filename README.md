@@ -48,6 +48,13 @@ deviceName          // the given name to the device
 deviceGroup         // the group to which the device belongs
 ```
 
+## Developer info
+AWS setup for development:
+- Create development User in AWS IAM
+- Set User permissions (with policies)
+- Create access key for development
+- use development keyname and key in the development environment
+
 ## License & Collaboration
 **Copyright© 2024 Sanne 'SpuQ' Santens**. The Edgeberry Dashboard project is licensed under the **[GNU GPLv3](LICENSE.txt)**.
 

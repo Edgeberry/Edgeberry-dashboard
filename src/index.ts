@@ -57,9 +57,9 @@ app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeberry Dashboard backend running
  */
 let dynamoClient;
 
-if( process.env.DYNAMO_CONF ){
+if( process.env.AWS_CREDENTIALS ){
     console.log("Initializing DynamoDB client for development");
-    dynamoClient = new DynamoDBClient(JSON.parse((process.env.DYNAMO_CONF).toString()));
+    dynamoClient = new DynamoDBClient(JSON.parse((process.env.AWS_CREDENTIALS).toString()));
 }
 else{
     dynamoClient = new DynamoDBClient({region: 'eu-north-1'});
@@ -76,9 +76,9 @@ export const edgeberryShadowName = 'edgeberry-device';
 
 let awsConfig:any;
 
-if( process.env.IOTCORE_CONF ){
+if( process.env.AWS_CREDENTIALS ){
     console.log("Initializing IoT Core client for development");
-    awsConfig = JSON.parse((process.env.IOTCORE_CONF).toString())
+    awsConfig = JSON.parse((process.env.AWS_CREDENTIALS).toString())
 }
 else{
     awsConfig = {region: 'eu-north-1'};
