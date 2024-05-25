@@ -20,12 +20,11 @@
  *            To view the connection state:
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
-import { DeleteThingCommand, DescribeThingCommand, DetachThingPrincipalCommand, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand } from '@aws-sdk/client-iot';
+import { DeleteThingCommand, DescribeThingCommand, DetachThingPrincipalCommand, IoTClient, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
 import { GetRetainedMessageCommand, GetThingShadowCommand, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName } from '..';
 import { Router } from "express";
 import { user_getUserFromCookie } from '../user';
-import { AttributeValue } from '@aws-sdk/client-dynamodb';
 const router = Router();
 
 
@@ -49,7 +48,7 @@ const router = Router();
 });*/
 
 /*
- *  GET Device List
+ *  GET Thing List
  *  Get the list of all the devices owned by this user. Attribute 'deviceOwner'
  *  in the 'Thing Type' is the logged-in user's UID.
  */
@@ -88,6 +87,8 @@ router.get('/description', async(req:any, res:any)=>{
         // Get the authenticated user
         const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
         if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // TODO: Check if user owns this thing!
+
         // Create and execute the 'describe thing' command
         const command = new DescribeThingCommand({thingName:req.query.thingName});
         const response = await AWSIoTClient.send( command );
@@ -97,24 +98,40 @@ router.get('/description', async(req:any, res:any)=>{
         return res.status(500).send({message:err.name+': '+err.message});
     }
 });
+
 /*
- * Update the device description
+ *  Update the device description
  *
+ *  https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/UpdateThingCommand/  
  */
 router.post('/description', async(req:any, res:any)=>{
+    // Thing name in URL parameters
+    if( typeof req.query.thingName !== 'string')
+    return res.status(400).send({message:"No thingName"});
     // Check for the presence of all required data
     if( typeof(req.body) !== 'object' ||
         typeof(req.body.deviceName) !== 'string' ||
-        typeof(req.body.deviceOwner) !== 'string' ||
-        typeof(req.body.deviceId) !== 'string')
+        typeof(req.body.deviceOwner) !== 'string' )
     return res.status(401).send({message:'Data invalid'});
     try{
         // Get the authenticated user
         const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
         if( !user ) return res.status(403).send({message:'Unauthorized'});
-
-        // ToDo: update the description
-
+        // ToDo: Check if user owns this thing
+        // Update the description
+        const parameters = {
+            thingName: req.query.thingName,
+            attributePayload:{
+                attributes:{
+                    deviceName: req.body.deviceName,
+                    deviceOwner: req.body.deviceOwner
+                }
+            }
+        }
+        // Create and execute the Thing update command
+        const command = new UpdateThingCommand( parameters );
+        const response = await AWSIoTClient.send( command );
+        return res.send(response);
     } 
     catch(err:any){
         return res.status(500).send({message:err.name});
