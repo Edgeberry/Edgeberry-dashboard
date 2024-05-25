@@ -47,6 +47,8 @@ deviceOwner         // the ID of the device owner
 deviceName          // the given name to the device
 deviceGroup         // the group to which the device belongs
 ```
+## DynamoDB
+info about setting up dynamo
 
 ## Developer info
 AWS setup for development:

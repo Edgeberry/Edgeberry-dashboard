@@ -25,11 +25,15 @@ import { GetRetainedMessageCommand, GetThingShadowCommand, PublishCommand, Publi
 import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName } from '..';
 import { Router } from "express";
 import { user_getUserFromCookie } from '../user';
+import { AttributeValue } from '@aws-sdk/client-dynamodb';
 const router = Router();
 
 
-/* Get list of all things */
-router.get('/list', async(req:any, res:any)=>{
+/*  
+ *  Get list of all things
+ *  TODO: Only admin should be able to do this!
+ */
+/*router.get('/listAll', async(req:any, res:any)=>{
     try{
         // Get the authenticated user
         const user:any = await user_getUserFromCookie(req.cookies.jwt);
@@ -42,7 +46,34 @@ router.get('/list', async(req:any, res:any)=>{
     catch(err:any){
         return res.status(500).send({message:err.name+': '+err.message});
     }
+});*/
+
+/*
+ *  GET Device List
+ *  Get the list of all the devices owned by this user. Attribute 'deviceOwner'
+ *  in the 'Thing Type' is the logged-in user's UID.
+ */
+router.get('/list', async(req:any, res:any)=>{
+    try{
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt);
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+        // Create and execute the 'list things' command
+        const parameters = {
+            maxResults: 40,
+            attributeName: "deviceOwner",
+            AttributeValue: user.uid
+        }
+        var command = new ListThingsCommand( parameters );
+        var response = await AWSIoTClient.send( command );
+        return res.send( response.things );
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
+    }
 });
+
+
 
 /*  
  *  Get Thing Description
