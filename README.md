@@ -16,19 +16,33 @@ Fleet indexing is enabled to organize and search for IoT devices efficiently. It
 TODO Edgeberry registry info
 ```
 ### Provisioning
+Provisioning is the automated process of setting up and configuring devices and related services so they are ready for operation.
 ```
 AWS IoT > Connect many devices
 ```
-#### Provisioning template
+#### Provisioning template (with claim certificates)
 The provisioning template is a setup blueprint for adding new devices to your IoT system automatically. It includes all the necessary details, like certificates and policies, to get the devices up and running quickly.
 ```
 AWS IoT > Connect many devices > Create provisioning template > with claim certificates
 ```
 
-TODO: Change to JITP (Just in time provisioning)?
 ```
 TODO: Edgeberry provisioning template
 ```
+
+##### Device policy
+An AWS IoT Core device policy is a (JSON) document that defines the permissions for a device interacting with AWS IoT Core. These policies specify what actions a device is allowed to preform and on which resources within the AWS IoT environment. This policy ensures a device operates within defined security constrains and can only access necessary resources.
+
+```
+TODO: Edgeberry device policy
+```
+
+##### Security
+Assuming the provisioning certificate and key will become widely known really fast, we'll check the UUID of the device by defining a trigger for a Lambda function to check the provided UUID against a list of known devices (stored in DynamoDB). Additionally, we'll limit the amount of request a device can make within a time window to prevent brute-force guessing of valid UUIDs.
+```
+TODO: lambda function
+```
+
 #### Registration credentials
 TODO: info about the provisioning certificate and private key, etc.
 
