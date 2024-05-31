@@ -9,6 +9,27 @@ import * as jwt from 'jsonwebtoken';
 
 const userTable = 'edgeberry-io-users';
 
+/*
+ *  User database object
+ *  All the information in the right format as it should
+ *  be in the DynamoDB database. Note that we are only using
+ *  one layer of nesting (!)
+ */
+export interface user{
+    uid: string;                // The unique ID of this user
+    profile:{
+        name: string;           // The name of the user
+        email: string;          // The user's e-mail address
+        password: string;       // The encrypted user password
+    },
+    account:{
+        roles: [string];         // Platform role (e.g. user, admin, ...)
+        status: string;         // Current account status (active/inactive/unactivated/suspended)
+        token?: string;         // Token for activating account, resetting password, ...
+        lastActiveDate: number; // The moment the user was last active (timestamp)
+        creationDate: number;   // The moment the account was created (timestamp)
+    }
+}
 
 /* Encrypt */
 export async function encryptData( value:string ){
