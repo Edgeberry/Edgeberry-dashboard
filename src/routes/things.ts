@@ -340,4 +340,46 @@ function invokeDirectMethod( deviceId:string, methodName:string, methodBody:stri
     });
 }
 
+/*
+ *  Claim Thing
+ */
+router.get('/claim', async(req:any, res:any)=>{
+    // Thing name in URL parameters
+    if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
+    const uuid = req.query.thingName;
+
+    try{
+        // Get the authenticated user
+        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+        if( !user ) return res.status(403).send({message:'Unauthorized'});
+
+        // TODO: Check if device UUID exists !IMPORTANT
+        // TODO: Check if device is free to be claimed !IMPORTANT
+
+        // Validate the user is physical owner of the device
+        // by requiring the button to be pressed
+        invokeDirectMethod( uuid, 'linkToUserAccount','', 10 )
+        .then((result:any)=>{
+            console.log(result);
+            return res.send(result.payload);
+        })
+        // The direct method invocation didn't work
+        .catch((err)=>{
+            return res.status(500).send({message:"That didn't work..."});
+        })
+
+        /*
+        // Create and execute the 'get thing shadow' command
+        const command = new GetThingShadowCommand({thingName:req.query.thingName, shadowName: edgeberryShadowName})
+        const response = await AWSDataPlaneClient.send( command );
+        if( response.payload )
+        return res.send(JSON.parse( new TextDecoder().decode(response.payload)));
+
+        return res.status(500).send({message:"No payload"});*/
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name});
+    }
+});
+
 export default router;
