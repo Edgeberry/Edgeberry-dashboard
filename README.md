@@ -67,6 +67,10 @@ info about setting up dynamo
 ## Elastic Beanstalk
 Setting up Elastic Beanstalk for running the Edgeberry Dashboard application.
 
+### Create NodeJS environment
+Edgeberry Dashboard is written for NodeJS. Create an Elastic Beanstalk environment for NodeJS. \
+https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_nodejs.html
+
 ### Environment Variables
 Environment variables required for running the Edgeberry Dashboard:
 
