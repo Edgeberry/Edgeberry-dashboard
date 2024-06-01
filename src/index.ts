@@ -31,6 +31,7 @@ import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
 // API routes
 import userRoutes from './routes/user';
 import thingRoutes from './routes/things';
+import dashboardRoutes from './routes/dashboard';
 
 /* 
  *  Express API server
@@ -43,6 +44,7 @@ app.use(cookieParser());        // for the cookies (jwt)
 // Use the API Routers
 app.use('/api/user', userRoutes );
 app.use('/api/things', thingRoutes );
+app.use('/api/dashboard', dashboardRoutes );
 // Serve the public directory and a static HTML index file
 app.use(express.static( __dirname+'/public/'));
 app.get('*', (req:any, res:any)=>{
