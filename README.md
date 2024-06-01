@@ -72,9 +72,8 @@ Edgeberry Dashboard is written for NodeJS. Create an Elastic Beanstalk environme
 https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_nodejs.html
 
 ### Environment Variables
-Environment variables required for running the Edgeberry Dashboard:
+Set up the required environment variables for running the Edgeberry Dashboard. Navigate to your environment ```Elastic Beanstalk > Environment: Edgeberry-dashboard > Configuration > Environment Properties``` and add following properties:
 
-```> Environment: Edgeberry-dashboard > Configuration > Environment Properties```
 | Key                           | Value                                    |
 |-------------------------------|------------------------------------------|
 | PORT                          | 8081                                     |
