@@ -68,16 +68,15 @@ info about setting up dynamo
 Setting up Elastic Beanstalk for running the Edgeberry Dashboard application.
 
 ### Environment Variables
-Environment variables required for running the Edgeberry Dashboard
-```
-Elastic Beanstalk > Environment: Edgeberry-dashboard > Configuration > Environment Properties
-```
+Environment variables required for running the Edgeberry Dashboard:
+
+```> Environment: Edgeberry-dashboard > Configuration > Environment Properties```
 | Key                           | Value                                    |
 |-------------------------------|------------------------------------------|
 | PORT                          | 8081                                     |
-| JWT_SECRET                    | <JSON Web token secret>                  |
-| AWS_IOT_PROVISIONING_KEY      | <Provisioning key for claim certificate> |
-| AWS_IOT_PROVISIONING_CERT_ID  | <Provisioning certificate ID>            |
+| JWT_SECRET                    | \<JSON Web token secret\>                  |
+| AWS_IOT_PROVISIONING_KEY      | \<Key for provisioning claim certificate\> |
+| AWS_IOT_PROVISIONING_CERT_ID  | \<Provisioning certificate ID\>            |
 
 ## Developer info
 AWS setup for development:
