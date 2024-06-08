@@ -3,7 +3,7 @@
  */
 import { dynamoDocumentClient as documentClient } from '.';
 import { DeleteItemCommand, ScanCommand  } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand, PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
+import { PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
 import * as bcrypt from 'bcryptjs';             // for password encryption (hashing with a salt)
 import * as jwt from 'jsonwebtoken';
 import { email_activateAccount } from './email';
@@ -191,9 +191,10 @@ export function user_updateUserProfile( uid:string, name:string, email:string ){
 }
 
 /*
- *  Delete user profile
+ *  Delete user account
  *  Delete this user and release all its assets.
  *  
+ *  https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/dynamodb/command/DeleteItemCommand/
  */
 export function user_deleteUserProfile( uid:string ){
     return new Promise( async(resolve, reject)=>{
@@ -212,6 +213,7 @@ export function user_deleteUserProfile( uid:string ){
 
         try{
             const response = await documentClient.send(command);
+            // TODO: send deletion e-mail
             return resolve(response);
         }
         catch(err:any){
