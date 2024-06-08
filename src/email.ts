@@ -1,14 +1,16 @@
 /*
  *  E-mail
- *  This application sends e-mails using AWS SES
+ *  Send e-mails from the Edgeberry Dashboard using AWS SES, for example
+ *  for account activation.
  * 
  *  resources:
  *      https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/ses-examples-sending-email.html
+ *      https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html
  */
 
 import { SendEmailCommand, SendEmailCommandInput } from "@aws-sdk/client-ses";
 import { awsSesClient } from ".";
-const sender = "noreply@edgeberry.io"
+const sender = "noreply@edgeberry.io";
 
 /*
  *  Send e-mail
@@ -36,15 +38,17 @@ function sendEmail( receiver:string, subject:string, htmlBody:string ){
         }
         // Create the send e-mail command
         const sendEmailCommand = new SendEmailCommand(settings);
-
-
-        awsSesClient.send(sendEmailCommand)
-        .then(()=>{
-            return resolve('success');
-        })
-        .catch((err)=>{
+        try{
+            awsSesClient.send(sendEmailCommand)
+            .then(()=>{
+                return resolve('success');
+            })
+            .catch((err)=>{
+                return reject(err);
+            });
+        } catch(err){
             return reject(err);
-        });
+        }
     });
 }
 

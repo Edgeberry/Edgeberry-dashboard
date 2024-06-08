@@ -86,6 +86,11 @@ For sending mails from the Edgeberry Dashboard (e.g. account activation e-mail).
 ```
 TODO
 ```
+### Request production access
+To send e-mails to unverified accounts (your new users are probably all unverified), you must request production access
+```
+TODO
+```
 
 ## Developer info
 AWS setup for development:
