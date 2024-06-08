@@ -83,7 +83,7 @@ export async function user_createNewUser( email:string, password:string, usernam
             const response = await documentClient.send(command);
             // Send the activation e-mail to the user's e-mail address
             email_activateAccount(email, username, activationToken);
-            
+
             return resolve(response);
         }
         catch(err){
@@ -108,7 +108,7 @@ export async function user_activateAccount( email:string, token:string ){
         // neutral error message for user protection
         if( !user ) return reject('Invalid activation attempt');
         
-        // Compare the activation tokens
+        // Compare the activation tokenstomer action completed
         // neutral error message for user protection
         if( user.account.M.token.S !== token )
         return reject('Invalid activation attempt');
@@ -147,9 +147,85 @@ export async function user_activateAccount( email:string, token:string ){
     });
 }
 
+/*
+ *  Update user profile
+ */
+export function user_updateUserProfile( uid:string, name:string, email:string ){
+    return new Promise( async(resolve, reject)=>{
+        // check if the e-mail address is already in the database, because this uniquely
+        // identifies this user.
+        const user:any = await user_findByEmail( email )
+            .catch(()=>{
+                return reject('Lookup failed');
+            });
+        // If a user with this e-mail is found, other than this user,
+        // reject
+        if( user && user.uid.S !== uid ) return reject('E-mail already in use');
 
+        // Update the account state to active
+        // and erase the activation token
+        const command = new UpdateCommand({
+            TableName: userTable,
+            Key:{
+                uid:uid
+            },
+            UpdateExpression:'set profile.#name = :newName, profile.#email = :newEmail',
+            ExpressionAttributeNames: {
+                '#name': 'name',
+                '#email':'email'
+            },
+            ExpressionAttributeValues: {
+                ':newName': name,
+                ':newEmail': email
+            }
+        });
 
+        try{
+            const response = await documentClient.send(command);
+            return resolve(response);
+        }
+        catch(err:any){
+            return reject(err);
+        }
+    });
+}
 
+/*
+ *  Update password
+ */
+export function user_updateUserPassword( uid:string, password:string, newPassword:string ){
+    return new Promise( async(resolve, reject)=>{
+        // Get the user
+        const user:any = await user_findById( uid )
+        .catch(()=>{
+            return reject('User lookup failed');
+        });
+
+        // Compare the passwords
+        if( !await bcrypt.compare( password, user.profile.M.password.S ) )
+        return reject('Old Password is incorrect');
+
+        // Update the new password
+        const command = new UpdateCommand({
+            TableName: userTable,
+            Key:{
+                uid:uid
+            },
+            UpdateExpression:'set profile.password = :newPassword',
+            ExpressionAttributeValues: {
+                ':newPassword': await encryptData(newPassword)
+            }
+        });
+        
+        try{
+            const response = await documentClient.send(command);
+            return resolve(response);
+        }
+        catch(err:any){
+            return reject(err);
+        }
+    });
+}
 
 /* Get User's AWS credentials */
 /* OBSOLETE - keeping these as example for now
