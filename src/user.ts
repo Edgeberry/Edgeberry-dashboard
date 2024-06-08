@@ -6,6 +6,7 @@ import { ScanCommand  } from '@aws-sdk/client-dynamodb';
 import { PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
 import * as bcrypt from 'bcryptjs';             // for password encryption (hashing with a salt)
 import * as jwt from 'jsonwebtoken';
+import { email_activateAccount } from './email';
 
 const userTable = 'edgeberry-io-users';
 
@@ -78,7 +79,11 @@ export async function user_createNewUser( email:string, password:string, usernam
         });
 
         try{
+            // Create the user account in the database
             const response = await documentClient.send(command);
+            // Send the activation e-mail to the user's e-mail address
+            email_activateAccount(email, username, activationToken);
+            
             return resolve(response);
         }
         catch(err){

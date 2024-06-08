@@ -22,12 +22,15 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';  // parse cookies from requests
-// DynamoDB Client
+// AWS DynamoDB Client
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-// IoT Core Client
+// AWS IoT Core Client
 import { IoTClient } from '@aws-sdk/client-iot';
 import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane';
+// AWS Simple Email Service client
+import { SESClient } from "@aws-sdk/client-ses";
+
 // API routes
 import userRoutes from './routes/user';
 import thingRoutes from './routes/things';
@@ -90,3 +93,8 @@ else{
 export const awsIotClient = new IoTClient( awsConfig );
 // Create a new Data Plane client
 export const awsDataPlaneClient = new IoTDataPlaneClient( awsConfig );
+
+/*
+ *  AWS Simple Email Service client
+ */
+export const awsSesClient = new SESClient( awsConfig );

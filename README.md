@@ -81,6 +81,12 @@ Set up the required environment variables for running the Edgeberry Dashboard. N
 | AWS_IOT_PROVISIONING_KEY      | \<Key for provisioning claim certificate\> |
 | AWS_IOT_PROVISIONING_CERT_ID  | \<Provisioning certificate ID\>            |
 
+## Simple E-mail Service (SES)
+For sending mails from the Edgeberry Dashboard (e.g. account activation e-mail).
+```
+TODO
+```
+
 ## Developer info
 AWS setup for development:
 - Create development User in AWS IAM
