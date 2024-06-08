@@ -15,7 +15,7 @@ const userTable = 'edgeberry-io-users';
  *  be in the DynamoDB database. Note that we are only using
  *  one layer of nesting (!)
  */
-export interface user{
+export interface User{
     uid: string;                // The unique ID of this user
     profile:{
         name: string;           // The name of the user
@@ -51,15 +51,30 @@ export async function user_createNewUser( email:string, password:string, usernam
         // If a user with this e-mail is found, reject
         if( user ) return reject('E-mail already registered');
 
+        // Generate an activation token
+        const activationToken = (Math.random()).toString(36).substring(2);
+
+        // Create the new user object
+        const newUser:User = {
+            uid: crypto.randomUUID(),
+            profile:{
+                name: username,
+                email: email,
+                password: await encryptData(password)
+            },
+            account:{
+                roles:["user"],
+                status: "unactivated",
+                lastActiveDate: Date.now(),
+                creationDate: Date.now(),
+                token: activationToken
+            }
+        }
+
         // Create the command to create the new user
         const command = new PutCommand({
             TableName: userTable,
-            Item:{
-                uid: crypto.randomUUID(),
-                username: username,
-                email: email,
-                password: await encryptData(password)
-            }
+            Item:newUser
         });
 
         try{
@@ -152,7 +167,7 @@ async function user_findByEmail( email:string ){
         const command = new ScanCommand({
             TableName: userTable,
             FilterExpression:
-              "email = :email",
+              "profile.email = :email",     // E-mail is nested in 'profile'
             ExpressionAttributeValues: {
               ":email": {"S":email}
             },

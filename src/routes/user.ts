@@ -2,11 +2,38 @@
  *  REST API: User Routes
  */
 import { Router } from "express";
-import { user_checkCredentials, user_getUserFromCookie } from "../user";
+import { user_checkCredentials, user_createNewUser, user_getUserFromCookie } from "../user";
 import * as jwt from 'jsonwebtoken';
 const router = Router();
 
 const secret = process.env.JWT_SECRET?process.env.JWT_SECRET:'';
+if( secret === '' ) console.error('No secret for the JWT');
+
+/* 
+ *  Register new user
+ *  
+ */
+router.post('/register', async(req:any, res:any)=>{
+    // Check for the presence of all required data
+    if( typeof(req.body) !== 'object' ||
+        typeof(req.body.name) !== 'string' ||
+        typeof(req.body.email) !== 'string' ||
+        typeof(req.body.password) !== 'string')
+    return res.status(401).send({message:'Data invalid'});
+    // TODO: a lot of checks are ran by the frontend, but we should
+    // run more extensive checks here too. Users are dangerous.
+
+    // Create the new user
+    user_createNewUser(req.body.email, req.body.password, req.body.name )
+    .then((result)=>{
+        return res.send({message:'success'});
+    })
+    .catch((err)=>{
+        return res.status(500).send({message:err.toString()});
+    });
+
+});
+
 
 /* Log in */
 router.post('/login', async(req:any, res:any)=>{
