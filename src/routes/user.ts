@@ -108,7 +108,7 @@ router.get('/user', async(req:any, res:any)=>{
     }
 });
 
-/* Update user data */
+/* Update user profile data */
 router.put('/user', async(req:any, res:any)=>{
     // Check for the authenticated user
     const user:any = await user_getUserFromCookie(req.cookies.jwt);
@@ -126,42 +126,5 @@ router.put('/user', async(req:any, res:any)=>{
         return res.status(500).send({message:err.toString()});
     }
 });
-
-/* Update user's AWS settings */
-/* OBSOLETE
-router.post('/awssettings', async(req:any, res:any)=>{
-    if( typeof(req.body) !== 'object' ||
-        typeof(req.body.endpoint) !== 'string' ||
-        typeof(req.body.region) !== 'string' ||
-        typeof(req.body.accessKeyId) !== 'string' ||
-        typeof(req.body.secretAccessKey) !== 'string')
-    return res.status(401).send({message:'Invalid data'});
-    
-    try{
-        // Check for the user
-        const user:any = await user_getUserFromCookie(req.cookies.jwt);
-        if( !user ) return res.status(403).send({message:'No user'});
-        // Update the credentials
-        await user_updateAwsCredentials( user.uid, req.body.endpoint, req.body.region, req.body.accessKeyId, req.body.secretAccessKey );
-        return res.send({message:'success'})
-    } catch(err:any){
-        return res.status(500).send({message:err.toString()});
-    }
-});
-
-/* Get user's AWS settings */
-/* OBSOLETE
-router.get('/awssettings', async(req:any, res:any)=>{
-    try{
-        const user:any = await user_getUserFromCookie(req.cookies.jwt);
-        if( !user ) return res.status(403).send({message:'No user'});
-        const settings = await user_getAwsCredentials( user.uid );
-        return res.send(settings);
-    }
-    catch(err:any){
-        return res.status(500).send({message:err.toString()});
-    }
-});
-*/
 
 export default router;
