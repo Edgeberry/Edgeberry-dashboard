@@ -2,8 +2,8 @@
  *  User related operations
  */
 import { dynamoDocumentClient as documentClient } from '.';
-import { ScanCommand  } from '@aws-sdk/client-dynamodb';
-import { PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
+import { DeleteItemCommand, ScanCommand  } from '@aws-sdk/client-dynamodb';
+import { DeleteCommand, PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
 import * as bcrypt from 'bcryptjs';             // for password encryption (hashing with a salt)
 import * as jwt from 'jsonwebtoken';
 import { email_activateAccount } from './email';
@@ -191,6 +191,39 @@ export function user_updateUserProfile( uid:string, name:string, email:string ){
 }
 
 /*
+ *  Delete user profile
+ *  Delete this user and release all its assets.
+ *  
+ */
+export function user_deleteUserProfile( uid:string ){
+    return new Promise( async(resolve, reject)=>{
+        // TODO: release all devices owned by
+        // this user
+
+        // Delete the account from the database
+        const command = new DeleteItemCommand({
+            TableName: userTable,
+            Key:{
+                uid:{
+                    S: uid
+                }
+            }
+        });
+
+        try{
+            const response = await documentClient.send(command);
+            return resolve(response);
+        }
+        catch(err:any){
+            return reject(err);
+        }
+    });
+}
+
+
+
+
+/*
  *  Update password
  */
 export function user_updateUserPassword( uid:string, password:string, newPassword:string ){
@@ -216,7 +249,7 @@ export function user_updateUserPassword( uid:string, password:string, newPasswor
                 ':newPassword': await encryptData(newPassword)
             }
         });
-        
+
         try{
             const response = await documentClient.send(command);
             return resolve(response);

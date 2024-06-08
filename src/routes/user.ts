@@ -2,7 +2,7 @@
  *  REST API: User Routes
  */
 import { Router } from "express";
-import { user_activateAccount, user_checkCredentials, user_createNewUser, user_getUserFromCookie, user_updateUserProfile } from "../user";
+import { user_activateAccount, user_checkCredentials, user_createNewUser, user_deleteUserProfile, user_getUserFromCookie, user_updateUserProfile } from "../user";
 import * as jwt from 'jsonwebtoken';
 const router = Router();
 
@@ -126,5 +126,21 @@ router.put('/user', async(req:any, res:any)=>{
         return res.status(500).send({message:err.toString()});
     }
 });
+
+/* Delete user profile */
+router.delete('/user', async(req:any, res:any)=>{
+    // Check for the authenticated user
+    const user:any = await user_getUserFromCookie(req.cookies.jwt);
+    if( !user ) return res.status(403).send({message:'Unauthorized'});
+
+    // Delete the authenticated user
+    try{
+        await user_deleteUserProfile( user.uid );
+        return res.send({message:'success'});
+    } catch(err:any){
+        return res.status(500).send({message:err.toString()});
+    }
+});
+
 
 export default router;
