@@ -100,15 +100,16 @@ export async function user_activateAccount( email:string, token:string ){
                 return reject('Lookup failed');
             });
         // If no user with this e-mail is found, reject
-        // TODO: neutralize error message for user protection
-        if( !user ) return reject('E-mail not registered');
+        // neutral error message for user protection
+        if( !user ) return reject('Invalid activation attempt');
         
         // Compare the activation tokens
-        // TODO: neutralize error message for user protection
+        // neutral error message for user protection
         if( user.account.M.token.S !== token )
-        return reject('Invalid activation token');
+        return reject('Invalid activation attempt');
 
         // Update the account state to active
+        // and erase the activation token
         const command = new UpdateCommand({
             TableName: userTable,
             Key:{
@@ -116,9 +117,9 @@ export async function user_activateAccount( email:string, token:string ){
             },
             UpdateExpression:'set account.#status = :newStatus, account.#token = :newToken',
             ConditionExpression: 'account.#status = :expectedStatus',   // TODO: condition not working as expected...?
-            ExpressionAttributeNames: {                             // 'status' and 'token' are reserved key words
-                '#status': 'status',                                // so we use '#status' and '#token', and we change
-                '#token':'token'                                    // it to 'status' using ExpressionAttributeNames
+            ExpressionAttributeNames: {     // 'status' and 'token' are reserved key words
+                '#status': 'status',        // so we use '#status' and '#token', and we change
+                '#token':'token'            // it to their actual keys using ExpressionAttributeNames
             },
             ExpressionAttributeValues: {
                 ':newStatus': 'active',
@@ -133,6 +134,7 @@ export async function user_activateAccount( email:string, token:string ){
         }
         catch(err:any){
             if(err.name === "ConditionalCheckFailedException"){
+                // We erase the token, so we shouldn't get here
                 return reject("Account is already activated");
             }
             return reject(err);
