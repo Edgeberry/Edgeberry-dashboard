@@ -2,7 +2,7 @@
  *  REST API: User Routes
  */
 import { Router } from "express";
-import { user_activateAccount, user_checkCredentials, user_createNewUser, user_getUserFromCookie } from "../user";
+import { user_activateAccount, user_checkCredentials, user_createNewUser, user_getUserFromCookie, user_updateUserProfile } from "../user";
 import * as jwt from 'jsonwebtoken';
 const router = Router();
 
@@ -109,13 +109,19 @@ router.get('/user', async(req:any, res:any)=>{
 });
 
 /* Update user data */
-router.post('/user', async(req:any, res:any)=>{
-    if( typeof(req.body) !== 'object' )
-    return res.status(401).send({message:'No data'});
-    
+router.put('/user', async(req:any, res:any)=>{
+    // Check for the authenticated user
+    const user:any = await user_getUserFromCookie(req.cookies.jwt);
+    if( !user ) return res.status(403).send({message:'Unauthorized'});
+    // Check for the required parameters
+    if( typeof(req.body) !== 'object' || 
+        typeof(req.body.username) !== 'string' || 
+        typeof(req.body.email) !== 'string')
+    return res.status(401).send({message:'Invalid user data'});
+    // Update the user profile data
     try{
-        //await cloud.updateConnectionParameters( req.body );
-        return res.send({message:'User data successfully updated'})
+        await user_updateUserProfile( user.uid, req.body.username, req.body.email );
+        return res.send({message:'success'})
     } catch(err:any){
         return res.status(500).send({message:err.toString()});
     }
