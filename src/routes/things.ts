@@ -61,7 +61,7 @@ router.get('/list', async(req:any, res:any)=>{
         const parameters = {
             maxResults: 40,
             attributeName: "deviceOwner",
-            AttributeValue: user.uid
+            AttributeValue: user.uid            // TODO: something wrong here! all devices with any owner UID are listed
         }
         var command = new ListThingsCommand( parameters );
         var response = await AWSIoTClient.send( command );

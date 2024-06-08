@@ -49,7 +49,7 @@ export async function user_createNewUser( email:string, password:string, usernam
                 return reject('Lookup failed');
             });
         // If a user with this e-mail is found, reject
-        if( user ) return reject('E-mail already registered');
+        if( user ) return reject('E-mail already exists');
 
         // Generate an activation token
         const activationToken = (Math.random()).toString(36).substring(2);
@@ -171,8 +171,7 @@ async function user_findByEmail( email:string ){
             ExpressionAttributeValues: {
               ":email": {"S":email}
             },
-            ConsistentRead: true,
-            Limit: 1                        // limit the query to 1 result
+            ConsistentRead: true
           });
         // Execute the query command
         try{
@@ -201,8 +200,7 @@ async function user_findById( id:string ){
             ExpressionAttributeValues: {
               ":id": {"S":id}
             },
-            ConsistentRead: true,
-            Limit: 1                        // limit the query to 1 result
+            ConsistentRead: true
           });
         // Execute the query command
         try{
@@ -226,11 +224,12 @@ export function user_checkCredentials( email:string, password:string ){
         .catch(()=>{
             return reject('Lookup failed');
         });
+
         // If no user with this e-mail is found, reject
         if( !user ) return reject('E-mail does not exist');
 
         // Compare the passwords
-        if( !await bcrypt.compare( password, user.password.S ) )
+        if( !await bcrypt.compare( password, user.profile.M.password.S ) )
         return reject('Password incorrect');
 
         // If we got here, credentials check out
@@ -245,14 +244,14 @@ export function user_getUserFromCookie( cookie:any ){
             const claims = jwt.verify(cookie, process.env.JWT_SECRET?process.env.JWT_SECRET:'');    // retreive user userID from the cookie
             if( !claims || typeof(claims) !== 'object' ) return reject('No claims from cookie')     // if no claims were made, no user
             if( typeof(claims.uid) !== 'string') return reject('No ID in cookie');                  // if no userID was in claims, no user
-            const user:any|null = await user_findById( claims.uid );                                         // get the user info from the database by the userID claimed from the cookie
+            const user:any|null = await user_findById( claims.uid );                                // get the user info from the database by the userID claimed from the cookie
             if( !user ) reject('No user with this ID');                                             // if there was no user found with this _id, no user
 
             // Format user
             const formattedUser = {
                 uid: user.uid.S,
-                username: user.username.S,
-                email: user.email.S
+                username: user.profile.M.name.S,
+                email: user.profile.M.email.S
             }
 
             resolve(formattedUser);

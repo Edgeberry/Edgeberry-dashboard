@@ -26,11 +26,13 @@ router.post('/register', async(req:any, res:any)=>{
     // Create the new user
     user_createNewUser(req.body.email, req.body.password, req.body.name )
     .then((result)=>{
+        // TODO: send activation e-mail !!!
         return res.send({message:'success'});
     })
     .catch((err)=>{
         return res.status(500).send({message:err.toString()});
     });
+
 
 });
 
@@ -45,16 +47,19 @@ router.post('/login', async(req:any, res:any)=>{
     
     try{
         const user:any = await user_checkCredentials( req.body.email, req.body.password );
+        // Check if the account is active
+        if(user.account.M.status.S !== "active")
+        return res.status(403).send({message:'Account not active'});
 
         // Attach a cookie
         // generate a JWT token
         const token = jwt.sign({uid: user.uid.S }, secret );
         // create a cookie, named jwt, the value is the token
         res.cookie('jwt', token, {
-            httpOnly: true,         // important for security - the front-end is not able to access the cookie
-	        secure: true,		    // only over HTTPS
-	        sameSite: true,		    // only send for requests to the same FQDN
-            maxAge: 10*24*60*60*1000 // valid for 10 days
+            httpOnly: true,             // important for security - the front-end is not able to access the cookie
+	        secure: true,		        // only over HTTPS
+	        sameSite: true,		        // only send for requests to the same FQDN
+            maxAge: 10*24*60*60*1000    // valid for 10 days
         });
 
         return res.send({message:'success'});
