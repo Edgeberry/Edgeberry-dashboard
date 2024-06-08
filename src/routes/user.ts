@@ -2,7 +2,7 @@
  *  REST API: User Routes
  */
 import { Router } from "express";
-import { user_checkCredentials, user_createNewUser, user_getUserFromCookie } from "../user";
+import { user_activateAccount, user_checkCredentials, user_createNewUser, user_getUserFromCookie } from "../user";
 import * as jwt from 'jsonwebtoken';
 const router = Router();
 
@@ -32,10 +32,28 @@ router.post('/register', async(req:any, res:any)=>{
     .catch((err)=>{
         return res.status(500).send({message:err.toString()});
     });
-
-
 });
 
+/* 
+ *  Activate User Account
+ *  using the e-mail address and the activation token
+ */
+router.post('/activate', async(req:any, res:any)=>{
+    // Check for the presence of all required data
+    if( typeof(req.body) !== 'object' ||
+        typeof(req.body.email) !== 'string' ||
+        typeof(req.body.token) !== 'string')
+    return res.status(401).send({message:'Data invalid'});
+
+    // Activate the useraccount
+    user_activateAccount(req.body.email, req.body.token )
+    .then((result:any)=>{
+        return res.send({message:'success'});
+    })
+    .catch((err:any)=>{
+        return res.status(500).send({message:err.toString()});
+    });
+});
 
 /* Log in */
 router.post('/login', async(req:any, res:any)=>{

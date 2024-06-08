@@ -87,6 +87,62 @@ export async function user_createNewUser( email:string, password:string, usernam
     })
 }
 
+/*
+ *  Activate user account
+ *  with e-mail address and token
+ */
+export async function user_activateAccount( email:string, token:string ){
+    return new Promise( async(resolve, reject)=>{
+        // check if the e-mail address is already in the database, because this uniquely
+        // identifies this user.
+        const user:any = await user_findByEmail( email )
+            .catch(()=>{
+                return reject('Lookup failed');
+            });
+        // If no user with this e-mail is found, reject
+        // TODO: neutralize error message for user protection
+        if( !user ) return reject('E-mail not registered');
+        
+        // Compare the activation tokens
+        // TODO: neutralize error message for user protection
+        if( user.account.M.token.S !== token )
+        return reject('Invalid activation token');
+
+        // Update the account state to active
+        const command = new UpdateCommand({
+            TableName: userTable,
+            Key:{
+                uid:user.uid.S
+            },
+            UpdateExpression:'set account.#status = :newStatus, account.#token = :newToken',
+            ConditionExpression: 'account.#status = :expectedStatus',   // TODO: condition not working as expected...?
+            ExpressionAttributeNames: {                             // 'status' and 'token' are reserved key words
+                '#status': 'status',                                // so we use '#status' and '#token', and we change
+                '#token':'token'                                    // it to 'status' using ExpressionAttributeNames
+            },
+            ExpressionAttributeValues: {
+                ':newStatus': 'active',
+                ':newToken':'',
+                ':expectedStatus': 'unactivated'
+            }
+        });
+
+        try{
+            const response = await documentClient.send(command);
+            return resolve(response);
+        }
+        catch(err:any){
+            if(err.name === "ConditionalCheckFailedException"){
+                return reject("Account is already activated");
+            }
+            return reject(err);
+        }
+    });
+}
+
+
+
+
 
 /* Get User's AWS credentials */
 /* OBSOLETE - keeping these as example for now
