@@ -2,7 +2,7 @@
  *  REST API: User Routes
  */
 import { Router } from "express";
-import { user_activateAccount, user_checkCredentials, user_createNewUser, user_deleteUserProfile, user_getUserFromCookie, user_updateUserProfile } from "../user";
+import { user_activateAccount, user_checkCredentials, user_createNewUser, user_deleteUserProfile, user_getUserFromCookie, user_updateUserPassword, user_updateUserProfile } from "../user";
 import * as jwt from 'jsonwebtoken';
 const router = Router();
 
@@ -136,6 +136,26 @@ router.delete('/user', async(req:any, res:any)=>{
     // Delete the authenticated user
     try{
         await user_deleteUserProfile( user.uid );
+        return res.send({message:'success'});
+    } catch(err:any){
+        return res.status(500).send({message:err.toString()});
+    }
+});
+
+/* Update user password */
+router.put('/password', async(req:any, res:any)=>{
+    // Check for the authenticated user
+    const user:any = await user_getUserFromCookie(req.cookies.jwt);
+    if( !user ) return res.status(403).send({message:'Unauthorized'});
+    // Check for the required parameters
+    if( typeof(req.body) !== 'object' || 
+        typeof(req.body.password) !== 'string' || 
+        typeof(req.body.newPassword) !== 'string')
+    return res.status(401).send({message:'Invalid user data'});
+
+    // Delete the authenticated user
+    try{
+        await user_updateUserPassword( user.uid, req.body.password, req.body.newPassword );
         return res.send({message:'success'});
     } catch(err:any){
         return res.status(500).send({message:err.toString()});
