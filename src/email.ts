@@ -60,17 +60,50 @@ export function email_activateAccount( email:string, name:string, token:string )
         // Create the activation link
         const activationLink = "https://edgeberry.io/dashboard/activate?email="+email+"&token="+token;
 
-        sendEmail( email, "Edgeberry account activation",`
+        sendEmail( email, "Edgeberry Dashboard account activation",`
             <html>
-                <h1>Hi ${name}!</h1>
+                <h2>Hi ${name}!</h2>
                 <p>
                     Welcome to the <strong>Edgeberry Dashboard</strong>! To finalize the registration process, click the 
                     activation link to activate your account: <br/>
                     <a href="${activationLink}">Activate account</a>
+                </p>
                 <p>
+                    Best regards,<br/>
+                    <strong style="color:#0e0e0e">The Edgeberry Team</strong>
+                </p>
+            </html>
+        `)
+        .then(()=>{
+            return resolve('success');
+        })
+        .catch((err)=>{
+            return reject(err);
+        });
+    });
+}
+
+
+/*
+ *  Send deletion e-mail
+ */
+export function email_deleteAccount( email:string, name:string ){
+    return new Promise((resolve, reject)=>{
+
+        sendEmail( email, "Edgeberry Dashboard account deletion",`
+            <html>
+                <h2>Hi ${name}!</h2>
                 <p>
-                    Kind regards,
-                    The Edgeberry Team
+                    We're sorry to see you leave the <strong>Edgeberry Dashboard</strong>. Whenever you need us, you are always welcome
+                    to create a new account! Following actions have been taken:
+                    <ul>
+                        <li>Your account and all your personal data has been removed from our systems</li>
+                        <li>Your devices have been released, and can be reclaimed</li>
+                    </ul>
+                </p>
+                <p>
+                    Best regards,<br/>
+                    <strong style="color:#0e0e0e">The Edgeberry Team</strong>
                 </p>
             </html>
         `)

@@ -6,7 +6,7 @@ import { DeleteItemCommand, ScanCommand  } from '@aws-sdk/client-dynamodb';
 import { PutCommand, UpdateCommand} from '@aws-sdk/lib-dynamodb';
 import * as bcrypt from 'bcryptjs';             // for password encryption (hashing with a salt)
 import * as jwt from 'jsonwebtoken';
-import { email_activateAccount } from './email';
+import { email_activateAccount, email_deleteAccount } from './email';
 
 const userTable = 'edgeberry-io-users';
 
@@ -198,6 +198,9 @@ export function user_updateUserProfile( uid:string, name:string, email:string ){
  */
 export function user_deleteUserProfile( uid:string ){
     return new Promise( async(resolve, reject)=>{
+        const user:any = await user_findById( uid );
+        if( !user ) return reject("User not found");
+
         // TODO: release all devices owned by
         // this user
 
@@ -213,7 +216,7 @@ export function user_deleteUserProfile( uid:string ){
 
         try{
             const response = await documentClient.send(command);
-            // TODO: send deletion e-mail
+            email_deleteAccount( user.profile.M.email.S, user.profile.M.name.S )
             return resolve(response);
         }
         catch(err:any){
