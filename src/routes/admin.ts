@@ -3,8 +3,12 @@
  */
 
 import { Router } from "express";
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { user_getUserFromCookie } from '../user';
+import { dynamoDocumentClient as documentClient } from '..';
 const router = Router();
+
+const deviceTable = 'edgeberry-dashboard-devices';
 
 /*
  *  Device onboarding
@@ -25,13 +29,32 @@ router.post('/onboard', async(req:any, res:any)=>{
     if(!user.roles?.filter((role:string)=>{role.includes("admin")}))
     return res.status(403).send({message:'Unauthorized'});
 
-    //.then((result)=>{
-        // TODO: send activation e-mail !!!
-        return res.send({message:'success'});
-    /*})
+    // TODO: run more checks on the provided data
+    // e.g. check of, by major coincidence, this device ID exists already
+
+    // Create the new device object
+    const device = {
+        uuid: req.body.id,
+        hardwareVersion: req.body.hardwareVersion,
+        batchNumber: req.body.batchNumber,
+        creationDate: Date.now(),
+        adminId: user.uid
+    }
+    
+    // Create the command to create the new device
+    const command = new PutCommand({
+        TableName: deviceTable,
+        Item:device
+    });
+    
+    // Create the device in the database
+    documentClient.send(command)
+    .then((result)=>{
+        return res.send({message:'success'})
+    })
     .catch((err)=>{
         return res.status(500).send({message:err.toString()});
-    });*/
+    })
 });
 
 
