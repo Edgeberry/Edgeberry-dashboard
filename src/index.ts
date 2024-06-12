@@ -35,6 +35,7 @@ import { SESClient } from "@aws-sdk/client-ses";
 import userRoutes from './routes/user';
 import thingRoutes from './routes/things';
 import dashboardRoutes from './routes/dashboard';
+import adminRoutes from './routes/admin';
 
 /* 
  *  Express API server
@@ -48,6 +49,7 @@ app.use(cookieParser());        // for the cookies (jwt)
 app.use('/api/user', userRoutes );
 app.use('/api/things', thingRoutes );
 app.use('/api/dashboard', dashboardRoutes );
+app.use('/api/admin', adminRoutes );
 // Serve the public directory and a static HTML index file
 app.use(express.static( __dirname+'/public/'));
 app.get('*', (req:any, res:any)=>{
