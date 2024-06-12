@@ -428,7 +428,8 @@ export function user_getUserFromCookie( cookie:any ){
             const formattedUser = {
                 uid: user.uid.S,
                 username: user.profile.M.name.S,
-                email: user.profile.M.email.S
+                email: user.profile.M.email.S,
+                roles: user.account.M.roles.L.map((role:any)=>{return role.S })
             }
 
             resolve(formattedUser);
