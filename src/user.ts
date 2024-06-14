@@ -337,6 +337,33 @@ export function user_updateAwsCredentials( uid:string, endpoint:string, region:s
 }
 */
 
+/*
+ *  ADMIN: List all users
+ *  
+ */
+export async function user_listUsers(){
+    return new Promise(async(resolve, reject)=>{
+        // Create the query command
+        const command = new ScanCommand({
+            TableName: userTable,
+            ConsistentRead: true
+          });
+        // Execute the query command
+        try{
+            const response = await documentClient.send(command);
+            if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items ){
+                return resolve(response.Items);
+            }
+            else{
+                return resolve(null);
+            }
+        }
+        catch(err){
+            return reject(err);
+        }
+    });
+}
+
 /* Find user by e-mail address */
 async function user_findByEmail( email:string ){
     return new Promise(async(resolve, reject)=>{
