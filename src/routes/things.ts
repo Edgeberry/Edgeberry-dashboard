@@ -20,7 +20,7 @@
  *            To view the connection state:
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
-import { DeleteThingCommand, DescribeThingCommand, DetachThingPrincipalCommand, IoTClient, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
+import { DeleteThingCommand, DescribeThingCommand, DetachThingPrincipalCommand, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
 import { GetRetainedMessageCommand, GetThingShadowCommand, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName } from '..';
 import { Router } from "express";
@@ -51,6 +51,8 @@ const router = Router();
  *  GET Thing List
  *  Get the list of all the devices owned by this user. Attribute 'deviceOwner'
  *  in the 'Thing Type' is the logged-in user's UID.
+ * 
+ *  https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/ListThingsCommand/
  */
 router.get('/list', async(req:any, res:any)=>{
     try{
@@ -58,10 +60,11 @@ router.get('/list', async(req:any, res:any)=>{
         const user:any = await user_getUserFromCookie(req.cookies.jwt);
         if( !user ) return res.status(403).send({message:'Unauthorized'});
         // Create and execute the 'list things' command
+        // with parameters to search for the deviceOwner ID
         const parameters = {
             maxResults: 40,
             attributeName: "deviceOwner",
-            AttributeValue: user.uid            // TODO: something wrong here! all devices with any owner UID are listed
+            attributeValue: user.uid
         }
         var command = new ListThingsCommand( parameters );
         var response = await AWSIoTClient.send( command );
