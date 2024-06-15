@@ -20,11 +20,12 @@
  *            To view the connection state:
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
-import { DeleteThingCommand, DescribeThingCommand, DetachThingPrincipalCommand, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
+import { DeleteCertificateCommand, DeleteThingCommand, DescribeThingCommand, DetachPolicyCommand, DetachThingPrincipalCommand, ListAttachedPoliciesCommand, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
 import { GetRetainedMessageCommand, GetThingShadowCommand, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
 import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName } from '..';
 import { Router } from "express";
 import { user_getUserFromCookie } from '../user';
+import { device_checkDeviceOwner } from '../devices';
 const router = Router();
 
 
@@ -90,7 +91,9 @@ router.get('/description', async(req:any, res:any)=>{
         // Get the authenticated user
         const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
         if( !user ) return res.status(403).send({message:'Unauthorized'});
-        // TODO: Check if user owns this thing!
+        // Check if user owns this device
+        if(!await device_checkDeviceOwner(req.query.thingName, user.uid))
+        return res.status(403).send({message:'Unauthorized'});
 
         // Create and execute the 'describe thing' command
         const command = new DescribeThingCommand({thingName:req.query.thingName});
@@ -143,6 +146,8 @@ router.post('/description', async(req:any, res:any)=>{
 
 /*  
  *  Delete Thing
+ *  When a user deletes a device, it becomes free again to be claimed
+ *  TODO: improve this procedure and check all steps
  *  https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/DeleteThingCommand/
  *  https://stackoverflow.com/questions/36003491/how-to-delete-aws-iot-things-and-policies
  */
@@ -150,11 +155,15 @@ router.post('/delete', async(req:any, res:any)=>{
     // Thing name in URL parameters
     if( typeof req.query.thingName !== 'string')
     return res.status(400).send({message:"No thingName"});
+    // Get the authenticated user
+    const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+    if( !user ) return res.status(403).send({message:'Unauthorized'});
+    // Check if user owns this device
+    if(!await device_checkDeviceOwner(req.query.thingName, user.uid))
+    return res.status(403).send({message:'Unauthorized'});
 
     try{
-        // Get the authenticated user
-        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
-        if( !user ) return res.status(403).send({message:'Unauthorized'});
+
         // List Thing principals
         const listThingPrincipalsCommand = new ListThingPrincipalsCommand({thingName:req.query.thingName});
         const thingPrincipals = await AWSIoTClient.send( listThingPrincipalsCommand );
@@ -162,18 +171,38 @@ router.post('/delete', async(req:any, res:any)=>{
         // Detach all thing principals
         if( thingPrincipals.principals )
         for( const principal of thingPrincipals.principals){
-            // Detach the certificate
-            const detachThingPrincipalCommand = new DetachThingPrincipalCommand({thingName:req.query.thingName, principal:principal});
-            await AWSIoTClient.send( detachThingPrincipalCommand );
-            // Get the certificate from the principal
-            const certificateId = principal.split('/').pop();
-            //console.log(certificateId)
-            // Deactivate the certificate (before deletion)
-            const deactivateCertificateCommand = new UpdateCertificateCommand({certificateId:certificateId, newStatus:'INACTIVE'});
-            await AWSIoTClient.send( deactivateCertificateCommand );
-            // TODO: Delete certificate
-            //const deleteCertificateCommand = new DeleteCertificateCommand({certificateId:certificateId})
-            //AWSIoTClient.send( deleteCertificateCommand );
+            try{
+                // Detach the certificate
+                const detachThingPrincipalCommand = new DetachThingPrincipalCommand({thingName:req.query.thingName, principal:principal});
+                await AWSIoTClient.send( detachThingPrincipalCommand );
+                
+                // List all policies attached to the certificate and detach each policy from the certificate.
+                // The 'principal' is the certificate ARN
+                // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/ListAttachedPoliciesCommand/
+                // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/DetachPolicyCommand/
+                const listAttachedPoliciesCommand = new ListAttachedPoliciesCommand({target:principal});
+                const attachedPoliciesList = await AWSIoTClient.send( listAttachedPoliciesCommand );
+                if( attachedPoliciesList.policies && attachedPoliciesList.policies?.length > 0 ){
+                    for( const policy of attachedPoliciesList.policies){
+                        const detachPolicyCommand = new DetachPolicyCommand({policyName:policy.policyName, target:principal});
+                        await AWSIoTClient.send( detachPolicyCommand );
+                    }
+                }
+                // Deactivate the certificate.
+                // Get the certificate ID from the principal
+                // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/UpdateCertificateCommand/
+                const certificateId = principal.split('/').pop();
+                const deactivateCertificateCommand = new UpdateCertificateCommand({certificateId:certificateId, newStatus:'INACTIVE'});
+                await AWSIoTClient.send( deactivateCertificateCommand );
+
+                // Delete the certificate
+                // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/iot/command/DeleteCertificateCommand/
+                const deleteCertificateCommand = new DeleteCertificateCommand({certificateId:certificateId, forceDelete:true})
+                AWSIoTClient.send( deleteCertificateCommand );
+            }
+            catch(err){
+                console.error("Unclaim device: detachment of principals failed");
+            }
         };
 
         //Create and execute the 'delete thing' command
