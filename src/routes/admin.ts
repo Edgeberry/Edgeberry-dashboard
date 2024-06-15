@@ -4,8 +4,9 @@
 
 import { Router } from "express";
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { ListThingsCommand } from '@aws-sdk/client-iot';
 import { user_checkUserForRole, user_getUserFromCookie, user_listUsers } from '../user';
-import { dynamoDocumentClient as documentClient } from '..';
+import { awsIotClient, dynamoDocumentClient as documentClient } from '..';
 const router = Router();
 
 const deviceTable = 'edgeberry-dashboard-devices';
@@ -57,6 +58,29 @@ router.post('/onboard', async(req:any, res:any)=>{
     })
 });
 
+/*  
+ *  Get list of all devices
+ *  
+ */
+router.get('/devices/list', async(req:any, res:any)=>{
+    // Get the authenticated user
+    const user:any = await user_getUserFromCookie(req.cookies.jwt);
+    if( !user ) return res.status(403).send({message:'Unauthorized'});
+    // Check if the user has admin rights
+    if(!user_checkUserForRole(user, "admin"))
+    return res.status(403).send({message:'Unauthorized'});
+    
+    try{
+        // Create and execute the 'list things' command
+        var command = new ListThingsCommand( {maxResults:40} );
+        var response = await awsIotClient.send( command );
+        return res.send( response.things );
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
+    }
+});
+
 
 /*
  *  List Dashboard Users
@@ -70,7 +94,7 @@ router.get('/users/list', async(req:any, res:any)=>{
     if(!user_checkUserForRole(user, "admin"))
     return res.status(403).send({message:'Unauthorized'});
 
-    
+
     user_listUsers()
     .then((result)=>{
         return res.send(result);
