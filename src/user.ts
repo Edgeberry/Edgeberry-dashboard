@@ -466,3 +466,12 @@ export function user_getUserFromCookie( cookie:any ){
         }
     });
 }
+
+/*
+ *  Check User for Role
+ *  Check a user for a specific role, like 'admin'
+ */
+export function user_checkUserForRole( user:any, role:string ){
+    if (user.roles?.indexOf(role) > -1) return true;
+    return false;
+}
