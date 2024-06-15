@@ -25,28 +25,8 @@ import { GetRetainedMessageCommand, GetThingShadowCommand, PublishCommand, Publi
 import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName } from '..';
 import { Router } from "express";
 import { user_getUserFromCookie } from '../user';
-import { device_checkDeviceOwner } from '../devices';
+import { device_checkDeviceOwner, device_updateDeviceOwner } from '../devices';
 const router = Router();
-
-
-/*  
- *  Get list of all things
- *  TODO: Only admin should be able to do this!
- */
-/*router.get('/listAll', async(req:any, res:any)=>{
-    try{
-        // Get the authenticated user
-        const user:any = await user_getUserFromCookie(req.cookies.jwt);
-        if( !user ) return res.status(403).send({message:'Unauthorized'});
-        // Create and execute the 'list things' command
-        var command = new ListThingsCommand( {maxResults:40} );
-        var response = await AWSIoTClient.send( command );
-        return res.send( response.things );
-    }
-    catch(err:any){
-        return res.status(500).send({message:err.name+': '+err.message});
-    }
-});*/
 
 /*
  *  GET Thing List
@@ -75,8 +55,6 @@ router.get('/list', async(req:any, res:any)=>{
         return res.status(500).send({message:err.name+': '+err.message});
     }
 });
-
-
 
 /*  
  *  Get Thing Description
@@ -378,36 +356,35 @@ function invokeDirectMethod( deviceId:string, methodName:string, methodBody:stri
 router.get('/claim', async(req:any, res:any)=>{
     // Thing name in URL parameters
     if( typeof req.query.thingName !== 'string') return res.status(400).send({message:"No thingName"});
+    // Get the authenticated user
+    const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
+    if( !user ) return res.status(403).send({message:'Unauthorized'});
+    
     const uuid = req.query.thingName;
+    console.log("Claim attempt for: "+uuid);
 
     try{
-        // Get the authenticated user
-        const user:any = await user_getUserFromCookie(req.cookies.jwt) ;
-        if( !user ) return res.status(403).send({message:'Unauthorized'});
-
         // TODO: Check if device UUID exists !IMPORTANT
-        // TODO: Check if device is free to be claimed !IMPORTANT
+        // We will do this later, for now we're not checking the 'known devices'
+        // list
+
+        // Check if device is free to be claimed
+        if( !await device_checkDeviceOwner( uuid, "unclaimed" ))
+        return res.status(403).send({message:'Unauthorized'});
 
         // Validate the user is physical owner of the device
         // by requiring the button to be pressed
         invokeDirectMethod( uuid, 'linkToUserAccount','', 10 )
         .then((result:any)=>{
-            console.log(result);
-            return res.send(result.payload);
+            // If the user pressed the button, update the device's 
+            // owner to the current user's ID
+            device_updateDeviceOwner( uuid, user.uid );
+            return res.send({message:'success'});
         })
         // The direct method invocation didn't work
         .catch((err)=>{
             return res.status(500).send({message:"That didn't work..."});
-        })
-
-        /*
-        // Create and execute the 'get thing shadow' command
-        const command = new GetThingShadowCommand({thingName:req.query.thingName, shadowName: edgeberryShadowName})
-        const response = await AWSDataPlaneClient.send( command );
-        if( response.payload )
-        return res.send(JSON.parse( new TextDecoder().decode(response.payload)));
-
-        return res.status(500).send({message:"No payload"});*/
+        });
     }
     catch(err:any){
         return res.status(500).send({message:err.name});
