@@ -29,6 +29,8 @@ AWS IoT > Connect many devices > Create provisioning template > with claim certi
 ```
 TODO: Edgeberry provisioning template
 ```
+##### Resources
+https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html
 
 ##### Device policy
 An AWS IoT Core device policy is a (JSON) document that defines the permissions for a device interacting with AWS IoT Core. These policies specify what actions a device is allowed to preform and on which resources within the AWS IoT environment. This policy ensures a device operates within defined security constrains and can only access necessary resources.
