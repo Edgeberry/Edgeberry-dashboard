@@ -1,4 +1,4 @@
-![EdgeBerry](assets/Edgeberry_banner.png)
+![EdgeBerry Banner](https://raw.githubusercontent.com/Edgeberry/.github/main/brand/Edgeberry_banner_dashboard.png)
 
 > **"One _Dashboard_ to rule them all, one _Dashboard_ to find them, one _Dashboard_ to _connect_ them all and _on the internet_ bind them"**
 
