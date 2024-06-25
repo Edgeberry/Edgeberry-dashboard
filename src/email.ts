@@ -58,7 +58,7 @@ function sendEmail( receiver:string, subject:string, htmlBody:string ){
 export function email_activateAccount( email:string, name:string, token:string ){
     return new Promise((resolve, reject)=>{
         // Create the activation link
-        const activationLink = "https://edgeberry.io/dashboard/activate?email="+email+"&token="+token;
+        const activationLink = "https://dashboard.edgeberry.io/activate?email="+email+"&token="+token;
 
         sendEmail( email, "Edgeberry Dashboard account activation",`
             <html>
