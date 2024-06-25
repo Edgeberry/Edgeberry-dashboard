@@ -2,7 +2,7 @@
 
 > **"One _Dashboard_ to rule them all, one _Dashboard_ to find them, one _Dashboard_ to _connect_ them all and _on the internet_ bind them"**
 
-The Edgeberry Dashboard is an online asset management platform for [Edgeberry devices](https://github.com/SpuQ/Edgeberry). The official Edgeberry Dasboard is available on [Edgeberry.io](https://edgeberry.io/dashboard).
+The Edgeberry Dashboard is an online asset management platform for [Edgeberry devices](https://github.com/Edgeberry/Edgeberry). The official Edgeberry Dasboard is available on [Edgeberry.io](https://dashboard.edgeberry.io).
 
 ![Edgeberry Dashboard screenshot](assets/Edgeberry-dashboard.png)
 
