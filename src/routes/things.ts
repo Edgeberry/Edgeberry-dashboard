@@ -32,6 +32,9 @@ const router = Router();
  *  Get Provisioning Parameters
  *  This function is called by the Devices to automatically
  *  get the Dashboard's provisioning parameters.
+ * 
+ *  TODO: this function is a SECURITY RISK, because it can be 
+ *  bruteforced to eventually get a UUID that is actually in our database!
  */
 router.get('/provisioningparameters', async(req:any, res:any)=>{
     // The Device's Hardware UUID must be in the parameters
