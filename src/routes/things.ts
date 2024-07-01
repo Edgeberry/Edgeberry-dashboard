@@ -20,13 +20,53 @@
  *            To view the connection state:
  *              $ aws iot search-index --index-name "AWS_Things" --query-string "thingName:EdgeBerry_development"
  */
-import { DeleteCertificateCommand, DeleteThingCommand, DescribeThingCommand, DetachPolicyCommand, DetachThingPrincipalCommand, ListAttachedPoliciesCommand, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
+import { DeleteCertificateCommand, DeleteThingCommand, DescribeCertificateCommand, DescribeEndpointCommand, DescribeThingCommand, DetachPolicyCommand, DetachThingPrincipalCommand, ListAttachedPoliciesCommand, ListThingPrincipalsCommand, ListThingsCommand, SearchIndexCommand, UpdateCertificateCommand, UpdateThingCommand } from '@aws-sdk/client-iot';
 import { GetRetainedMessageCommand, GetThingShadowCommand, PublishCommand, PublishRequest } from '@aws-sdk/client-iot-data-plane';
-import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName } from '..';
+import { awsIotClient as AWSIoTClient, awsDataPlaneClient as AWSDataPlaneClient, edgeberryShadowName, awsIotClient } from '..';
 import { Router } from "express";
 import { user_getUserFromCookie } from '../user';
-import { device_checkDeviceOwner, device_updateDeviceOwner } from '../devices';
+import { device_checkDeviceOwner, device_checkKnownHardwareId, device_updateDeviceOwner } from '../devices';
 const router = Router();
+
+/*
+ *  Get Provisioning Parameters
+ *  This function is called by the Devices to automatically
+ *  get the Dashboard's provisioning parameters.
+ */
+router.get('/provisioningparameters', async(req:any, res:any)=>{
+    // The Device's Hardware UUID must be in the parameters
+    if( typeof(req.body) !== 'object' ||
+        typeof(req.body.hardwareId) !== 'string')
+    return res.status(401).send({message:'Data invalid'});
+
+    try{
+        // Lookup the Device's Hardware UUID in the database of the
+        // known (official) Edgeberry devices.
+        if( !await device_checkKnownHardwareId(req.body.hardwareId) )
+        return res.status(401).send({message:'Unknown Device ID'});
+
+        // Get the AWS IoT Core endpoint
+        const getEndpointCommand = new DescribeEndpointCommand({endpointType:'iot:Data-ATS'});
+        const getEndpointResponse = await awsIotClient.send(getEndpointCommand);
+        
+        // Get the AWS IoT Core provisioning (claim) certificate from the certificate ID (environment variables)
+        const getProvCertCommand = new DescribeCertificateCommand({certificateId:process.env.AWS_IOT_PROVISIONING_CERT_ID});
+        const getProvCertResponse = await awsIotClient.send(getProvCertCommand);
+        
+        const parameters = {
+            endpoint: getEndpointResponse.endpointAddress,
+            certificate: getProvCertResponse.certificateDescription?.certificatePem,
+            privateKey: process.env?.AWS_IOT_PROVISIONING_KEY    // Private Key is in the environment variables
+        }
+
+        return res.send(parameters);
+    }
+    catch(err:any){
+        return res.status(500).send({message:err.name+': '+err.message});
+    }
+});
+
+/* ===================================================================== */
 
 /*
  *  GET Thing List

@@ -62,6 +62,7 @@ app.listen( 8081, ()=>{ console.log('\x1b[32mEdgeberry Dashboard backend running
 /*
  *  DynamoDB Client
  */
+export const deviceTable = 'edgeberry-dashboard-devices';
 let dynamoClient;
 
 if( process.env.AWS_CREDENTIALS ){

@@ -6,10 +6,8 @@ import { Router } from "express";
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { ListThingsCommand } from '@aws-sdk/client-iot';
 import { user_checkUserForRole, user_getUserFromCookie, user_listUsers } from '../user';
-import { awsIotClient, dynamoDocumentClient as documentClient } from '..';
+import { deviceTable, awsIotClient, dynamoDocumentClient as documentClient } from '..';
 const router = Router();
-
-const deviceTable = 'edgeberry-dashboard-devices';
 
 /*
  *  Device onboarding

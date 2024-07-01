@@ -2,8 +2,46 @@
  *  Devices
  */
 import { UpdateThingCommand, DescribeThingCommand } from '@aws-sdk/client-iot';
-import { awsIotClient } from '.';
+import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { awsIotClient, dynamoDocumentClient as documentClient, deviceTable } from '.';
 import { response } from 'express';
+
+
+/*
+ *  Check Hardware UUID
+ *  Check if a device's Hardware UUID is in the database of known
+ *  Edgeberry Devices.
+ *  Resolves true if a device is known, resolves false if a device
+ *  is unknown. Rejects on error.
+ */
+export function device_checkKnownHardwareId( hardwareId:string ){
+    return new Promise<boolean|string>(async(resolve, reject)=>{
+        try{
+            // Lookup the Device's Hardware UUID in the database of the
+            // known (official) Edgeberry devices.
+            const command = new ScanCommand({
+                TableName: deviceTable,
+                FilterExpression:
+                    "#uuid = :hardwareid",
+                    ExpressionAttributeNames: {
+                        "#uuid":"uuid"
+                    },
+                    ExpressionAttributeValues: {
+                        ":hardwareid": hardwareId
+                    },
+                    ConsistentRead: true
+                });
+            // Execute the query command
+            const response = await documentClient.send(command);
+            if( typeof(response.Count) === 'number' && response.Count >= 1 && response.Items )
+            return resolve(true);
+            else return resolve(false);
+        }
+        catch(err){
+            return reject(err);
+        }
+    });
+}
 
 /*
  *  Check if User is Device owner
