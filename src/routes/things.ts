@@ -59,7 +59,7 @@ router.get('/provisioningparameters', async(req:any, res:any)=>{
         const parameters = {
             endpoint: getEndpointResponse.endpointAddress,
             certificate: getProvCertResponse.certificateDescription?.certificatePem,
-            privateKey: process.env?.AWS_IOT_PROVISIONING_KEY?.replace(/\\n/g, '\n')   // Private Key is in the environment variables
+            privateKey: process.env?.AWS_IOT_PROVISIONING_KEY?.replace(/ /g, '\n')   // Private Key is in the environment variables
         }
 
         return res.send(parameters);
