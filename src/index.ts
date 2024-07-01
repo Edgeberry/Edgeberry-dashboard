@@ -101,5 +101,3 @@ export const awsDataPlaneClient = new IoTDataPlaneClient( awsConfig );
  *  AWS Simple Email Service client
  */
 export const awsSesClient = new SESClient( awsConfig );
-
-console.log(process.env?.AWS_IOT_PROVISIONING_KEY?.replace(/\\n/g, '\n'));
